@@ -1,0 +1,104 @@
+<%- include('../partials/header', { pageTitle: 'Beheer dashboard' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-1"><i class="bi bi-speedometer2 text-primary"></i> Beheer dashboard</h2>
+    <p class="text-muted mb-0">Overzicht van alle geplande interview-events.</p>
+  </div>
+  <a href="/admin" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nieuw event
+  </a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-primary"><%= events.length %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-calendar-event"></i> Events totaal</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-info"><%= events.reduce((s, e) => s + e.slot_count, 0) %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-clock"></i> Tijdsloten totaal</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-success"><%= totalMatches %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-arrow-left-right"></i> Matches totaal</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Events table -->
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white">
+    <i class="bi bi-table"></i> Alle events
+  </div>
+  <% if (events.length === 0) { %>
+    <div class="card-body text-muted">
+      Nog geen events aangemaakt. <a href="/admin">Maak het eerste event aan.</a>
+    </div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Titel</th>
+            <th class="text-center">Tijdsloten</th>
+            <th class="text-center">Reacties</th>
+            <th class="text-center">Matches</th>
+            <th>Aangemaakt</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const ev of events) { %>
+            <tr>
+              <td>
+                <span class="fw-semibold"><%= ev.title %></span>
+                <% if (ev.description) { %>
+                  <br /><small class="text-muted"><%= ev.description %></small>
+                <% } %>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-secondary"><%= ev.slot_count %></span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-info text-dark"><%= ev.response_count %></span>
+              </td>
+              <td class="text-center">
+                <% if (ev.match_count > 0) { %>
+                  <span class="badge bg-success"><i class="bi bi-check-circle"></i> <%= ev.match_count %></span>
+                <% } else { %>
+                  <span class="text-muted small">—</span>
+                <% } %>
+              </td>
+              <td class="text-muted small">
+                <%= new Date(ev.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+              </td>
+              <td class="text-end">
+                <a
+                  href="/admin/events/<%= ev.id %>?token=<%= ev.admin_token %>"
+                  class="btn btn-outline-primary btn-sm"
+                >
+                  <i class="bi bi-eye"></i> Bekijken
+                </a>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

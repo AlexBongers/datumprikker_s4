@@ -7,6 +7,84 @@ const db = require('../db/database');
 const readLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false });
 const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
 
+// Require ADMIN_PASSWORD to be explicitly set in production
+if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD environment variable must be set in production.');
+}
+
+// Middleware: require admin session
+function requireAdmin(req, res, next) {
+  if (req.session && req.session.isAdmin) return next();
+  res.redirect('/admin/login');
+}
+
+// Dashboard login page
+router.get('/login', readLimiter, (req, res) => {
+  if (req.session && req.session.isAdmin) return res.redirect('/admin/dashboard');
+  res.render('admin/login', { error: null });
+});
+
+// Handle login
+router.post('/login', writeLimiter, (req, res) => {
+  const { password } = req.body;
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+  if (password === adminPassword) {
+    req.session.isAdmin = true;
+    return res.redirect('/admin/dashboard');
+  }
+  res.status(401).render('admin/login', { error: 'Ongeldig wachtwoord.' });
+});
+
+// Handle logout
+router.post('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/admin/login'));
+});
+
+// Dashboard – overview of all events
+router.get('/dashboard', readLimiter, requireAdmin, (req, res) => {
+  const events = db
+    .prepare(
+      `SELECT e.*,
+              COUNT(DISTINCT ts.id)  AS slot_count,
+              COUNT(DISTINCT r.id)   AS response_count
+       FROM events e
+       LEFT JOIN time_slots ts ON ts.event_id = e.id
+       LEFT JOIN responses r  ON r.event_id  = e.id
+       GROUP BY e.id
+       ORDER BY e.created_at DESC`
+    )
+    .all();
+
+  // Per-event match count: slots with at least one student AND one ondernemer response
+  const matchRows = db
+    .prepare(
+      `SELECT ts.event_id, COUNT(DISTINCT ts.id) AS match_count
+       FROM time_slots ts
+       WHERE EXISTS (
+         SELECT 1 FROM responses r
+         WHERE r.time_slot_id = ts.id AND r.responder_type = 'student'
+       )
+       AND EXISTS (
+         SELECT 1 FROM responses r
+         WHERE r.time_slot_id = ts.id AND r.responder_type = 'ondernemer'
+       )
+       GROUP BY ts.event_id`
+    )
+    .all();
+
+  const matchByEvent = {};
+  for (const row of matchRows) matchByEvent[row.event_id] = row.match_count;
+
+  const eventsWithStats = events.map((e) => ({
+    ...e,
+    match_count: matchByEvent[e.id] || 0,
+  }));
+
+  const totalMatches = Object.values(matchByEvent).reduce((a, b) => a + b, 0);
+
+  res.render('admin/dashboard', { events: eventsWithStats, totalMatches });
+});
+
 // Admin home - create new event
 router.get('/', readLimiter, (req, res) => {
   res.render('admin/index');

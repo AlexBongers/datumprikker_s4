@@ -43,6 +43,12 @@ app.use(
 app.use('/admin', generalLimiter);
 app.use('/events', generalLimiter);
 
+// Expose admin session state to all views
+app.use((req, res, next) => {
+  res.locals.isAdmin = !!(req.session && req.session.isAdmin);
+  next();
+});
+
 // Routes
 const adminRouter = require('./routes/admin');
 const eventsRouter = require('./routes/events');

@@ -28,6 +28,8 @@ services:
         value: /data/datumprikker.db
       - key: BASE_URL
         value: https://datumprikker.onrender.com
+      - key: ADMIN_PASSWORD
+        generateValue: true   # Render generates a secure random value; check it in the dashboard
     disk:
       name: datumprikker-data
       mountPath: /data
