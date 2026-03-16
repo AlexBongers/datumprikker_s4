@@ -1,0 +1,30 @@
+{
+  "name": "datumprikker_s4",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexBongers/datumprikker_s4.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AlexBongers/datumprikker_s4/issues"
+  },
+  "homepage": "https://github.com/AlexBongers/datumprikker_s4#readme",
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "express-session": "^1.19.0",
+    "uuid": "^13.0.0"
+  }
+}

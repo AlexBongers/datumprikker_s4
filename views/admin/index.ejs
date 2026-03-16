@@ -1,0 +1,120 @@
+<%- include('../partials/header', { pageTitle: 'Nieuw event aanmaken' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h2 class="mb-1"><i class="bi bi-calendar-plus text-primary"></i> Nieuw interview-event aanmaken</h2>
+    <p class="text-muted mb-4">Stel de beschikbare tijdsloten in voor de interviews.</p>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+    <% } %>
+
+    <form action="/admin/events" method="POST" id="eventForm">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-info-circle"></i> Event informatie
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="title" class="form-label fw-semibold">Titel <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              name="title"
+              value="<%= typeof title !== 'undefined' ? title : '' %>"
+              placeholder="bijv. Interviews Semester 4 - Groep A"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label fw-semibold">Beschrijving</label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              rows="2"
+              placeholder="Optionele beschrijving..."
+            ><%= typeof description !== 'undefined' ? description : '' %></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-clock"></i> Beschikbare tijdsloten
+        </div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Voeg alle mogelijke interview-momenten toe. Studenten en ondernemers kunnen daarna aangeven wanneer ze beschikbaar zijn.
+          </p>
+
+          <div id="slotsContainer">
+            <div class="slot-row row g-2 mb-2 align-items-center">
+              <div class="col">
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  name="slots[]"
+                  required
+                />
+              </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-slot" disabled>
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addSlot">
+            <i class="bi bi-plus-circle"></i> Tijdslot toevoegen
+          </button>
+        </div>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-check-circle"></i> Event aanmaken
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('addSlot').addEventListener('click', function () {
+    const container = document.getElementById('slotsContainer');
+    const row = document.createElement('div');
+    row.className = 'slot-row row g-2 mb-2 align-items-center';
+    row.innerHTML = `
+      <div class="col">
+        <input type="datetime-local" class="form-control" name="slots[]" required />
+      </div>
+      <div class="col-auto">
+        <button type="button" class="btn btn-outline-danger btn-sm remove-slot">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    `;
+    container.appendChild(row);
+    updateRemoveButtons();
+  });
+
+  document.getElementById('slotsContainer').addEventListener('click', function (e) {
+    if (e.target.closest('.remove-slot')) {
+      e.target.closest('.slot-row').remove();
+      updateRemoveButtons();
+    }
+  });
+
+  function updateRemoveButtons() {
+    const rows = document.querySelectorAll('.slot-row');
+    rows.forEach((row, i) => {
+      const btn = row.querySelector('.remove-slot');
+      btn.disabled = rows.length === 1;
+    });
+  }
+</script>
+
+<%- include('../partials/footer') %>

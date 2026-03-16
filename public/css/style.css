@@ -1,0 +1,43 @@
+/* Datumprikker custom styles */
+
+body {
+  background-color: #f8f9fa;
+}
+
+.navbar-brand {
+  font-size: 1.4rem;
+}
+
+/* Slot picker: toggle button style for availability */
+.slot-picker .btn-check:checked + .btn {
+  font-weight: 600;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.slot-picker .btn {
+  transition: all 0.15s ease-in-out;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+}
+
+.slot-option {
+  position: relative;
+}
+
+/* Availability table */
+.table th {
+  white-space: nowrap;
+}
+
+.table-success {
+  background-color: #d1e7dd !important;
+}
+
+/* Card hover effect */
+.card {
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
