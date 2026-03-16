@@ -27,7 +27,7 @@ services:
       - key: DATABASE_PATH
         value: /data/datumprikker.db
       - key: BASE_URL
-        sync: false           # fill in after first deploy with your .onrender.com URL
+        value: https://datumprikker.onrender.com
     disk:
       name: datumprikker-data
       mountPath: /data

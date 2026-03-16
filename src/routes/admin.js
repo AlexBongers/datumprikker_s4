@@ -88,7 +88,14 @@ router.get('/events/:id', readLimiter, (req, res) => {
     }
   }
 
-  res.render('admin/event', { event, slots, slotResponses, token });
+  // Derive the public base URL from the request so share links always point
+  // to the real host (e.g. https://datumprikker.onrender.com) rather than
+  // localhost. process.env.BASE_URL is used as an explicit override when set.
+  const baseUrl =
+    process.env.BASE_URL ||
+    `${req.protocol}://${req.get('host')}`;
+
+  res.render('admin/event', { event, slots, slotResponses, token, baseUrl });
 });
 
 module.exports = router;

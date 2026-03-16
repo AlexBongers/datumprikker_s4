@@ -31,7 +31,7 @@
               type="text"
               class="form-control font-monospace small"
               id="studentLink"
-              value="<%= `${process.env.BASE_URL || 'http://localhost:3000'}/events/${event.id}?type=student` %>"
+              value="<%= `${baseUrl}/events/${event.id}?type=student` %>"
               readonly
             />
             <button class="btn btn-outline-secondary" onclick="copyLink('studentLink')">
@@ -48,7 +48,7 @@
               type="text"
               class="form-control font-monospace small"
               id="ondernemer-link"
-              value="<%= `${process.env.BASE_URL || 'http://localhost:3000'}/events/${event.id}?type=ondernemer` %>"
+              value="<%= `${baseUrl}/events/${event.id}?type=ondernemer` %>"
               readonly
             />
             <button class="btn btn-outline-secondary" onclick="copyLink('ondernemer-link')">
