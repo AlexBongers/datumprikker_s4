@@ -1,7 +1,9 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, '../../data/datumprikker.db');
+const DB_PATH =
+  process.env.DATABASE_PATH ||
+  path.join(__dirname, '../../data/datumprikker.db');
 
 const fs = require('fs');
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });

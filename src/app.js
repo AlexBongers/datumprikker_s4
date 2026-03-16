@@ -5,6 +5,11 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+// Trust the reverse proxy (Render, Fly.io, Railway all sit behind one).
+// Required so that rate-limiting uses the real client IP and so that
+// secure session cookies work over the HTTPS connection provided by the proxy.
+app.set('trust proxy', 1);
+
 // View engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
