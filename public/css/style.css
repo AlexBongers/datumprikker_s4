@@ -1,43 +1,248 @@
-/* Datumprikker custom styles */
+/* ═══════════════════════════════════════════════════════════
+   Datumprikker — HU Cybercheck Design System
+   Kleurenpalet gebaseerd op Hogeschool Utrecht huisstijl:
+     Primair (navbar / koppen) : #3D5A8A  (HU slate-blue)
+     Succes / Match / Groen    : #7AB648  (cybercheck groen)
+     Student blauw             : #0072BC  (HU logo blauw)
+     Ondernemer amber          : #FFC107  (Bootstrap warning)
+   ═══════════════════════════════════════════════════════════ */
 
+/* ── Bootstrap 5 CSS-variabelen overschrijven ─────────────── */
+:root {
+  --bs-primary:          #3D5A8A;
+  --bs-primary-rgb:      61, 90, 138;
+  --bs-success:          #7AB648;
+  --bs-success-rgb:      122, 182, 72;
+  --bs-info:             #0072BC;
+  --bs-info-rgb:         0, 114, 188;
+  --bs-link-color:       #3D5A8A;
+  --bs-link-color-rgb:   61, 90, 138;
+  --bs-link-hover-color: #2f4870;
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
 body {
-  background-color: #f8f9fa;
+  background-color: #f4f6f9;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Primaire kleur (compiled Bootstrap classes) ──────────── */
+.bg-primary                { background-color: #3D5A8A !important; }
+.text-primary              { color: #3D5A8A !important; }
+.border-primary            { border-color: #3D5A8A !important; }
+
+.btn-primary               { background-color: #3D5A8A !important; border-color: #3D5A8A !important; color: #fff !important; }
+.btn-primary:hover,
+.btn-primary:focus         { background-color: #2f4870 !important; border-color: #2f4870 !important; }
+.btn-primary:active        { background-color: #26395a !important; border-color: #26395a !important; }
+
+.btn-outline-primary       { color: #3D5A8A !important; border-color: #3D5A8A !important; }
+.btn-outline-primary:hover { background-color: #3D5A8A !important; color: #fff !important; }
+
+.btn-outline-secondary:hover { background-color: #6c757d !important; color: #fff !important; }
+
+/* ── Succes / Cybercheck groen ────────────────────────────── */
+.bg-success                { background-color: #7AB648 !important; }
+.text-success              { color: #7AB648 !important; }
+.border-success            { border-color: #7AB648 !important; }
+
+.btn-success               { background-color: #7AB648 !important; border-color: #7AB648 !important; color: #fff !important; }
+.btn-success:hover,
+.btn-success:focus         { background-color: #639238 !important; border-color: #639238 !important; }
+
+.badge.bg-success          { background-color: #7AB648 !important; }
+
+.table-success,
+.table-success > td,
+.table-success > th        { background-color: #eaf4d9 !important; }
+
+.alert-success             { background-color: #eef7e2 !important; border-color: #b8dF82 !important; color: #3a5c1a !important; }
+
+/* ── Info / Student HU-blauw ─────────────────────────────── */
+.bg-info                   { background-color: #0072BC !important; }
+.text-info                 { color: #0072BC !important; }
+.badge.bg-info             { background-color: #0072BC !important; color: #fff !important; }
+.btn-info,
+.btn-outline-info:hover    { background-color: #0072BC !important; border-color: #0072BC !important; color: #fff !important; }
+.btn-outline-info          { color: #0072BC !important; border-color: #0072BC !important; }
+.card-header.bg-info       { background-color: #0072BC !important; color: #fff !important; }
+
+/* ── Navbar ───────────────────────────────────────────────── */
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .navbar-brand {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-/* Slot picker: toggle button style for availability */
-.slot-picker .btn-check:checked + .btn {
+.navbar-brand .hu-badge {
+  background: #fff;
+  color: #3D5A8A;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  vertical-align: middle;
+  line-height: 1.6;
+  display: inline-block;
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+
+/* ── Hero banner (under navbar) ───────────────────────────── */
+.hu-hero {
+  background: linear-gradient(135deg, #3D5A8A 0%, #2f4870 100%);
+  color: #fff;
+  padding: 1.1rem 0 1rem;
+  margin-bottom: 0;
+  border-bottom: 4px solid #7AB648;
+}
+
+.hu-hero .hero-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.hu-hero .hero-sub {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin: 0.1rem 0 0;
+}
+
+.hu-hero .hero-check {
+  color: #7AB648;
+  font-size: 1.1rem;
+}
+
+/* ── Main content ─────────────────────────────────────────── */
+main.container {
+  padding-top: 1.75rem;
+  padding-bottom: 2rem;
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.card {
+  border-radius: 0.5rem;
+  transition: box-shadow 0.15s ease-in-out;
+  border-color: #dee2e6;
+}
+
+.card:hover {
+  box-shadow: 0 0.4rem 1rem rgba(61, 90, 138, 0.12) !important;
+}
+
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
   font-weight: 600;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
+/* ── Slot picker ──────────────────────────────────────────── */
 .slot-picker .btn {
   transition: all 0.15s ease-in-out;
   text-align: left;
   padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
+}
+
+.slot-picker .btn-check:checked + .btn-outline-info {
+  background-color: #0072BC !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 0 0 0.2rem rgba(0, 114, 188, 0.3);
+}
+
+.slot-picker .btn-check:checked + .btn-outline-warning {
+  font-weight: 600;
+  box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.4);
 }
 
 .slot-option {
   position: relative;
 }
 
-/* Availability table */
+/* ── Table ────────────────────────────────────────────────── */
 .table th {
   white-space: nowrap;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #555;
 }
 
-.table-success {
-  background-color: #d1e7dd !important;
+/* ── Footer ───────────────────────────────────────────────── */
+.hu-partners {
+  background: #eef1f6;
+  border-top: 1px solid #d0d8e8;
+  padding: 1.25rem 0 1rem;
 }
 
-/* Card hover effect */
-.card {
-  transition: box-shadow 0.15s ease-in-out;
+.hu-partners .partners-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #3D5A8A;
+  margin-bottom: 0.75rem;
 }
 
-.card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+.hu-partners .partner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #3D5A8A;
+  background: #fff;
+  border: 1px solid #ccd4e3;
+  border-radius: 4px;
+  padding: 0.3rem 0.65rem;
+  margin: 0.2rem;
+  text-decoration: none;
+  transition: border-color 0.15s;
 }
+
+.hu-partners .partner-badge:hover {
+  border-color: #3D5A8A;
+}
+
+.hu-partners .partner-eu {
+  color: #003399;
+  border-color: #c5ccde;
+}
+
+.hu-footer-bottom {
+  background: #fff;
+  border-top: 1px solid #e0e5ef;
+  padding: 0.6rem 0;
+  font-size: 0.8rem;
+  color: #8a95a8;
+  text-align: center;
+}
+
+/* ── Dashboard summary cards ──────────────────────────────── */
+.display-6.fw-bold {
+  font-size: 2.4rem;
+}
+
+/* ── Badges ───────────────────────────────────────────────── */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Alerts ───────────────────────────────────────────────── */
+.alert-info {
+  background-color: #e6f2fb !important;
+  border-color: #9ecff0 !important;
+  color: #004f85 !important;
+}
+
+/* ── Utility ──────────────────────────────────────────────── */
+.font-monospace { font-size: 0.82rem; }
+
