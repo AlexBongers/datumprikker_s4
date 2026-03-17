@@ -18,6 +18,13 @@ function requireAdmin(req, res, next) {
   res.redirect('/admin/login');
 }
 
+// Helper: verify token matches event; returns event or null
+function getEventByToken(id, token) {
+  const event = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+  if (!event || event.admin_token !== token) return null;
+  return event;
+}
+
 // Dashboard login page
 router.get('/login', readLimiter, (req, res) => {
   if (req.session && req.session.isAdmin) return res.redirect('/admin/dashboard');
@@ -92,7 +99,7 @@ router.get('/', readLimiter, (req, res) => {
 
 // Create event with time slots
 router.post('/events', writeLimiter, (req, res) => {
-  const { title, description, slots } = req.body;
+  const { title, description, slots, slots_end } = req.body;
 
   if (!title || !slots || slots.length === 0) {
     return res.status(400).render('admin/index', {
@@ -109,16 +116,18 @@ router.post('/events', writeLimiter, (req, res) => {
     'INSERT INTO events (id, title, description, admin_token) VALUES (?, ?, ?, ?)'
   );
   const insertSlot = db.prepare(
-    'INSERT INTO time_slots (event_id, slot_datetime) VALUES (?, ?)'
+    'INSERT INTO time_slots (event_id, slot_datetime, slot_end_datetime) VALUES (?, ?, ?)'
   );
+
+  const slotList = Array.isArray(slots) ? slots : [slots];
+  const slotEndList = Array.isArray(slots_end) ? slots_end : (slots_end ? [slots_end] : []);
 
   const createEvent = db.transaction(() => {
     insertEvent.run(eventId, title, description || '', adminToken);
-    const slotList = Array.isArray(slots) ? slots : [slots];
-    for (const slot of slotList) {
-      if (slot && slot.trim()) {
-        insertSlot.run(eventId, slot.trim());
-      }
+    for (let i = 0; i < slotList.length; i++) {
+      const start = slotList[i]?.trim();
+      const end = (slotEndList[i] || '').trim() || null;
+      if (start) insertSlot.run(eventId, start, end);
     }
   });
 
@@ -132,11 +141,10 @@ router.get('/events/:id', readLimiter, (req, res) => {
   const { id } = req.params;
   const { token } = req.query;
 
-  const event = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
-  if (!event) return res.status(404).render('404');
-
-  if (event.admin_token !== token) {
-    return res.status(403).render('403');
+  const event = getEventByToken(id, token);
+  if (!event) {
+    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
+    return exists ? res.status(403).render('403') : res.status(404).render('404');
   }
 
   const slots = db
@@ -166,14 +174,96 @@ router.get('/events/:id', readLimiter, (req, res) => {
     }
   }
 
-  // Derive the public base URL from the request so share links always point
-  // to the real host (e.g. https://datumprikker.onrender.com) rather than
-  // localhost. process.env.BASE_URL is used as an explicit override when set.
   const baseUrl =
     process.env.BASE_URL ||
     `${req.protocol}://${req.get('host')}`;
 
   res.render('admin/event', { event, slots, slotResponses, token, baseUrl });
+});
+
+// Edit event form
+router.get('/events/:id/edit', readLimiter, (req, res) => {
+  const { id } = req.params;
+  const { token } = req.query;
+
+  const event = getEventByToken(id, token);
+  if (!event) {
+    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
+    return exists ? res.status(403).render('403') : res.status(404).render('404');
+  }
+
+  const slots = db
+    .prepare('SELECT * FROM time_slots WHERE event_id = ? ORDER BY slot_datetime')
+    .all(id);
+
+  res.render('admin/edit', { event, slots, token });
+});
+
+// Update event
+router.post('/events/:id/edit', writeLimiter, (req, res) => {
+  const { id } = req.params;
+  const { token, title, description, slots, slots_end } = req.body;
+
+  const event = getEventByToken(id, token);
+  if (!event) {
+    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
+    return exists ? res.status(403).render('403') : res.status(404).render('404');
+  }
+
+  const slotList = Array.isArray(slots) ? slots : (slots ? [slots] : []);
+  const slotEndList = Array.isArray(slots_end) ? slots_end : (slots_end ? [slots_end] : []);
+
+  if (!title || slotList.length === 0) {
+    const existingSlots = db
+      .prepare('SELECT * FROM time_slots WHERE event_id = ? ORDER BY slot_datetime')
+      .all(id);
+    return res.status(400).render('admin/edit', {
+      event,
+      slots: existingSlots,
+      token,
+      error: 'Vul een titel in en selecteer minimaal één tijdslot.',
+    });
+  }
+
+  const updateEvent = db.prepare(
+    'UPDATE events SET title = ?, description = ? WHERE id = ?'
+  );
+  const deleteSlots = db.prepare('DELETE FROM time_slots WHERE event_id = ?');
+  const insertSlot = db.prepare(
+    'INSERT INTO time_slots (event_id, slot_datetime, slot_end_datetime) VALUES (?, ?, ?)'
+  );
+
+  db.transaction(() => {
+    updateEvent.run(title, description || '', id);
+    deleteSlots.run(id);
+    for (let i = 0; i < slotList.length; i++) {
+      const start = slotList[i]?.trim();
+      const end = (slotEndList[i] || '').trim() || null;
+      if (start) insertSlot.run(id, start, end);
+    }
+  })();
+
+  res.redirect(`/admin/events/${id}?token=${token}`);
+});
+
+// Delete event
+router.post('/events/:id/delete', writeLimiter, (req, res) => {
+  const { id } = req.params;
+  const { token } = req.body;
+
+  const event = getEventByToken(id, token);
+  if (!event) {
+    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
+    return exists ? res.status(403).render('403') : res.status(404).render('404');
+  }
+
+  db.transaction(() => {
+    db.prepare('DELETE FROM responses WHERE event_id = ?').run(id);
+    db.prepare('DELETE FROM time_slots WHERE event_id = ?').run(id);
+    db.prepare('DELETE FROM events WHERE id = ?').run(id);
+  })();
+
+  res.redirect('/admin/dashboard');
 });
 
 module.exports = router;

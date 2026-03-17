@@ -1,15 +1,22 @@
-<%- include('../partials/header', { pageTitle: 'Nieuw event aanmaken' }) %>
+<%- include('../partials/header', { pageTitle: 'Event aanpassen' }) %>
 
 <div class="row justify-content-center">
   <div class="col-lg-8">
-    <h2 class="mb-1"><i class="bi bi-calendar-plus text-primary"></i> Nieuw interview-event aanmaken</h2>
-    <p class="text-muted mb-4">Stel de beschikbare tijdsloten in voor de interviews.</p>
+    <div class="d-flex justify-content-between align-items-start mb-1">
+      <h2 class="mb-0"><i class="bi bi-pencil-square text-primary"></i> Event aanpassen</h2>
+      <a href="/admin/events/<%= event.id %>?token=<%= token %>" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Terug
+      </a>
+    </div>
+    <p class="text-muted mb-4">Pas de titel, beschrijving of tijdsloten aan.</p>
 
     <% if (typeof error !== 'undefined' && error) { %>
       <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
     <% } %>
 
-    <form action="/admin/events" method="POST" id="eventForm">
+    <form action="/admin/events/<%= event.id %>/edit" method="POST" id="editForm">
+      <input type="hidden" name="token" value="<%= token %>" />
+
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
           <i class="bi bi-info-circle"></i> Event informatie
@@ -22,8 +29,7 @@
               class="form-control"
               id="title"
               name="title"
-              value="<%= typeof title !== 'undefined' ? title : '' %>"
-              placeholder="bijv. Interviews Semester 4 - Groep A"
+              value="<%= event.title %>"
               required
             />
           </div>
@@ -34,22 +40,25 @@
               id="description"
               name="description"
               rows="2"
-              placeholder="Optionele beschrijving..."
-            ><%= typeof description !== 'undefined' ? description : '' %></textarea>
+            ><%= event.description || '' %></textarea>
           </div>
         </div>
       </div>
 
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
-          <i class="bi bi-clock"></i> Beschikbare tijdsloten
+          <i class="bi bi-clock"></i> Tijdsloten
         </div>
         <div class="card-body">
           <p class="text-muted small mb-3">
-            Voeg alle mogelijke interview-momenten toe. Studenten en ondernemers kunnen daarna aangeven wanneer ze beschikbaar zijn.
+            Pas de beschikbare interview-momenten aan. Bestaande reacties op verwijderde slots worden mee verwijderd.
           </p>
 
           <div id="slotsContainer">
+            <% for (const slot of slots) {
+              const startVal = slot.slot_datetime ? slot.slot_datetime.slice(0, 16) : '';
+              const endVal   = slot.slot_end_datetime ? slot.slot_end_datetime.slice(0, 16) : '';
+            %>
             <div class="slot-row row g-2 mb-2 align-items-center">
               <div class="col-sm-5">
                 <label class="form-label form-label-sm text-muted mb-1">Begintijd <span class="text-danger">*</span></label>
@@ -57,6 +66,7 @@
                   type="datetime-local"
                   class="form-control"
                   name="slots[]"
+                  value="<%= startVal %>"
                   required
                 />
               </div>
@@ -66,14 +76,16 @@
                   type="datetime-local"
                   class="form-control"
                   name="slots_end[]"
+                  value="<%= endVal %>"
                 />
               </div>
               <div class="col-sm-auto mt-sm-4">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-slot" disabled>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-slot" <%= slots.length === 1 ? 'disabled' : '' %>>
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
             </div>
+            <% } %>
           </div>
 
           <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addSlot">
@@ -82,9 +94,12 @@
         </div>
       </div>
 
-      <div class="d-grid">
-        <button type="submit" class="btn btn-primary btn-lg">
-          <i class="bi bi-check-circle"></i> Event aanmaken
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+        <a href="/admin/events/<%= event.id %>?token=<%= token %>" class="btn btn-outline-secondary">
+          Annuleren
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Wijzigingen opslaan
         </button>
       </div>
     </form>

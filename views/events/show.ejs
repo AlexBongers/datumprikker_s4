@@ -74,6 +74,7 @@
                 <div class="slot-picker">
                   <% for (const slot of slots) {
                     const dt = new Date(slot.slot_datetime);
+                    const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
                   %>
                   <div class="slot-option mb-2">
                     <input
@@ -89,6 +90,7 @@
                       <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) %></strong>
                       &mdash;
                       <%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %>
+                      <% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
                     </label>
                   </div>
                   <% } %>
@@ -141,11 +143,15 @@
                       const sr = slotResponses[slot.id] || { students: [], ondernemers: [] };
                       const isMatch = sr.students.length > 0 && sr.ondernemers.length > 0;
                       const dt = new Date(slot.slot_datetime);
+                      const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
                     %>
                     <tr class="<%= isMatch ? 'table-success' : '' %>">
                       <td class="small">
                         <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }) %></strong><br/>
-                        <span class="text-muted"><%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %></span>
+                        <span class="text-muted">
+                          <%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %>
+                          <% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
+                        </span>
                       </td>
                       <td class="text-center">
                         <% if (sr.students.length === 0) { %>

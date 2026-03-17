@@ -86,12 +86,31 @@
                 <%= new Date(ev.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) %>
               </td>
               <td class="text-end">
-                <a
-                  href="/admin/events/<%= ev.id %>?token=<%= ev.admin_token %>"
-                  class="btn btn-outline-primary btn-sm"
-                >
-                  <i class="bi bi-eye"></i> Bekijken
-                </a>
+                <div class="d-flex gap-1 justify-content-end flex-wrap">
+                  <a
+                    href="/admin/events/<%= ev.id %>?token=<%= ev.admin_token %>"
+                    class="btn btn-outline-primary btn-sm"
+                  >
+                    <i class="bi bi-eye"></i> Bekijken
+                  </a>
+                  <a
+                    href="/admin/events/<%= ev.id %>/edit?token=<%= ev.admin_token %>"
+                    class="btn btn-outline-secondary btn-sm"
+                  >
+                    <i class="bi bi-pencil"></i> Aanpassen
+                  </a>
+                  <form
+                    action="/admin/events/<%= ev.id %>/delete"
+                    method="POST"
+                    class="d-inline delete-form"
+                    data-title="<%= ev.title %>"
+                  >
+                    <input type="hidden" name="token" value="<%= ev.admin_token %>" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                      <i class="bi bi-trash"></i> Verwijderen
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
           <% } %>
@@ -102,3 +121,14 @@
 </div>
 
 <%- include('../partials/footer') %>
+
+<script>
+  document.querySelectorAll('.delete-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      const title = form.dataset.title || 'dit event';
+      if (!confirm('Event "' + title + '" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+        e.preventDefault();
+      }
+    });
+  });
+</script>

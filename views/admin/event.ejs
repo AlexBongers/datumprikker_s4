@@ -10,7 +10,24 @@
           <p class="text-muted mb-0"><%= event.description %></p>
         <% } %>
       </div>
-      <span class="badge bg-primary fs-6">Beheerder</span>
+      <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <span class="badge bg-primary fs-6 align-self-start">Beheerder</span>
+        <a href="/admin/events/<%= event.id %>/edit?token=<%= token %>" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-pencil"></i> Aanpassen
+        </a>
+        <form
+          action="/admin/events/<%= event.id %>/delete"
+          method="POST"
+          class="d-inline"
+          id="deleteEventForm"
+          data-title="<%= event.title %>"
+        >
+          <input type="hidden" name="token" value="<%= token %>" />
+          <button type="submit" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash"></i> Verwijderen
+          </button>
+        </form>
+      </div>
     </div>
 
     <!-- Share links -->
@@ -80,15 +97,19 @@
                 </tr>
               </thead>
               <tbody>
-                <% for (const slot of slots) {
+                 <% for (const slot of slots) {
                   const sr = slotResponses[slot.id] || { students: [], ondernemers: [] };
                   const isMatch = sr.students.length > 0 && sr.ondernemers.length > 0;
                   const dt = new Date(slot.slot_datetime);
+                  const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
                 %>
                 <tr class="<%= isMatch ? 'table-success' : '' %>">
                   <td>
                     <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
-                    <br /><span class="text-muted"><%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %></span>
+                    <br /><span class="text-muted">
+                      <%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %>
+                      <% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
+                    </span>
                   </td>
                   <td class="text-center">
                     <% if (sr.students.length === 0) { %>
@@ -142,6 +163,13 @@
       setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 2000);
     });
   }
+
+  document.getElementById('deleteEventForm').addEventListener('submit', function (e) {
+    const title = this.dataset.title || 'dit event';
+    if (!confirm('Event "' + title + '" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+      e.preventDefault();
+    }
+  });
 </script>
 
 <%- include('../partials/footer') %>

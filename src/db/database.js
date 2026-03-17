@@ -27,6 +27,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_id TEXT NOT NULL,
     slot_datetime TEXT NOT NULL,
+    slot_end_datetime TEXT,
     FOREIGN KEY (event_id) REFERENCES events(id)
   );
 
@@ -41,5 +42,12 @@ db.exec(`
     UNIQUE(event_id, responder_name, responder_type, time_slot_id)
   );
 `);
+
+// Migrate: add slot_end_datetime column to existing databases that predate it
+try {
+  db.exec('ALTER TABLE time_slots ADD COLUMN slot_end_datetime TEXT');
+} catch (_) {
+  // Column already exists — safe to ignore
+}
 
 module.exports = db;
