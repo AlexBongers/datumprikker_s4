@@ -153,7 +153,8 @@ router.get('/events/:id', readLimiter, (req, res) => {
 
   const responses = db
     .prepare(
-      `SELECT r.responder_name, r.responder_type, r.time_slot_id
+      `SELECT r.responder_name, r.responder_type, r.time_slot_id,
+              r.contact_name, r.contact_email, r.contact_phone, r.location_preference
        FROM responses r
        WHERE r.event_id = ?`
     )
@@ -167,9 +168,15 @@ router.get('/events/:id', readLimiter, (req, res) => {
   for (const resp of responses) {
     if (slotResponses[resp.time_slot_id]) {
       if (resp.responder_type === 'student') {
-        slotResponses[resp.time_slot_id].students.push(resp.responder_name);
+        slotResponses[resp.time_slot_id].students.push({ name: resp.responder_name });
       } else {
-        slotResponses[resp.time_slot_id].ondernemers.push(resp.responder_name);
+        slotResponses[resp.time_slot_id].ondernemers.push({
+          name: resp.responder_name,
+          contactName: resp.contact_name || null,
+          email: resp.contact_email || null,
+          phone: resp.contact_phone || null,
+          location: resp.location_preference || null,
+        });
       }
     }
   }
@@ -178,7 +185,72 @@ router.get('/events/:id', readLimiter, (req, res) => {
     process.env.BASE_URL ||
     `${req.protocol}://${req.get('host')}`;
 
-  res.render('admin/event', { event, slots, slotResponses, token, baseUrl });
+  res.render('admin/event', {
+    event,
+    slots,
+    slotResponses,
+    token,
+    baseUrl,
+    respond_success: req.query.respond_success === '1',
+    respond_error: req.query.respond_error || null,
+  });
+});
+
+// Admin registers an ondernemer's availability on their behalf
+router.post('/events/:id/respond', writeLimiter, (req, res) => {
+  const { id } = req.params;
+  const { token, responder_name, contact_name, contact_email, contact_phone, location_preference, slots } = req.body;
+
+  const event = getEventByToken(id, token);
+  if (!event) {
+    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
+    return exists ? res.status(403).render('403') : res.status(404).render('404');
+  }
+
+  const name = (responder_name || '').trim();
+  if (!name) {
+    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Vul+een+bedrijfsnaam+in.`);
+  }
+
+  const slotList = Array.isArray(slots) ? slots : (slots ? [slots] : []);
+  if (slotList.length === 0) {
+    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Selecteer+minimaal+één+tijdslot.`);
+  }
+
+  // Validate all slot IDs belong to this event
+  const validSlots = db
+    .prepare(`SELECT id FROM time_slots WHERE event_id = ? AND id IN (${slotList.map(() => '?').join(',')})`)
+    .all(id, ...slotList.map(Number));
+
+  if (validSlots.length === 0) {
+    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Ongeldige+tijdsloten.`);
+  }
+
+  const deleteOld = db.prepare(
+    `DELETE FROM responses WHERE event_id = ? AND responder_name = ? AND responder_type = 'ondernemer'`
+  );
+  const insertResponse = db.prepare(
+    `INSERT OR IGNORE INTO responses
+       (event_id, responder_name, responder_type, time_slot_id, contact_name, contact_email, contact_phone, location_preference)
+     VALUES (?, ?, 'ondernemer', ?, ?, ?, ?, ?)`
+  );
+
+  db.transaction(() => {
+    deleteOld.run(id, name);
+    for (const slot of validSlots) {
+      insertResponse.run(
+        id,
+        name,
+        slot.id,
+        (contact_name || '').trim() || null,
+        (contact_email || '').trim() || null,
+        (contact_phone || '').trim() || null,
+        (location_preference || '').trim() || null
+      );
+    }
+  })();
+
+  res.redirect(`/admin/events/${id}?token=${token}&respond_success=1`);
 });
 
 // Edit event form

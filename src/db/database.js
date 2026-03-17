@@ -50,4 +50,15 @@ try {
   // Column already exists — safe to ignore
 }
 
+// Migrate: add contact info columns to responses (for admin-registered ondernemers)
+const contactMigrations = [
+  'ALTER TABLE responses ADD COLUMN contact_name TEXT',
+  'ALTER TABLE responses ADD COLUMN contact_email TEXT',
+  'ALTER TABLE responses ADD COLUMN contact_phone TEXT',
+  'ALTER TABLE responses ADD COLUMN location_preference TEXT',
+];
+for (const sql of contactMigrations) {
+  try { db.exec(sql); } catch (_) { /* column already exists */ }
+}
+
 module.exports = db;
