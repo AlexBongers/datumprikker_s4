@@ -1,0 +1,143 @@
+<%- include('../partials/header', { pageTitle: 'Beheer dashboard' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-1"><i class="bi bi-speedometer2 text-primary"></i> Beheer dashboard</h2>
+    <p class="text-muted mb-0">Overzicht van alle geplande interview-events.</p>
+  </div>
+  <a href="/admin" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nieuw event
+  </a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-primary"><%= events.length %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-calendar-event"></i> Events totaal</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-info"><%= events.reduce((s, e) => s + (e.student_count || 0), 0) %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-mortarboard"></i> Studenten</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-warning"><%= events.reduce((s, e) => s + (e.ondernemer_count || 0), 0) %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-briefcase"></i> Ondernemers</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="display-6 fw-bold text-success"><%= totalMatches %></div>
+        <div class="text-muted small mt-1"><i class="bi bi-arrow-left-right"></i> Matches totaal</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Events table -->
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white">
+    <i class="bi bi-table"></i> Alle events
+  </div>
+  <% if (events.length === 0) { %>
+    <div class="card-body text-muted">
+      Nog geen events aangemaakt. <a href="/admin">Maak het eerste event aan.</a>
+    </div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Titel</th>
+            <th class="text-center"><i class="bi bi-mortarboard text-info"></i> Studenten</th>
+            <th class="text-center"><i class="bi bi-briefcase text-warning"></i> Ondernemers</th>
+            <th class="text-center">Matches</th>
+            <th>Aangemaakt</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const ev of events) { %>
+            <tr>
+              <td>
+                <span class="fw-semibold"><%= ev.title %></span>
+                <% if (ev.description) { %>
+                  <br /><small class="text-muted"><%= ev.description %></small>
+                <% } %>
+                <br/><small class="text-muted"><i class="bi bi-clock"></i> <%= ev.slot_count %> tijdsloten</small>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-info text-dark"><%= ev.student_count || 0 %></span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-warning text-dark"><%= ev.ondernemer_count || 0 %></span>
+              </td>
+              <td class="text-center">
+                <% if (ev.match_count > 0) { %>
+                  <span class="badge bg-success"><i class="bi bi-check-circle"></i> <%= ev.match_count %></span>
+                <% } else { %>
+                  <span class="text-muted small">—</span>
+                <% } %>
+              </td>
+              <td class="text-muted small">
+                <%= new Date(ev.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+              </td>
+              <td class="text-end">
+                <div class="d-flex gap-1 justify-content-end flex-wrap">
+                  <a
+                    href="/admin/events/<%= ev.id %>?token=<%= ev.admin_token %>"
+                    class="btn btn-outline-primary btn-sm"
+                  >
+                    <i class="bi bi-eye"></i> Bekijken
+                  </a>
+                  <a
+                    href="/admin/events/<%= ev.id %>/edit?token=<%= ev.admin_token %>"
+                    class="btn btn-outline-secondary btn-sm"
+                  >
+                    <i class="bi bi-pencil"></i> Aanpassen
+                  </a>
+                  <form
+                    action="/admin/events/<%= ev.id %>/delete"
+                    method="POST"
+                    class="d-inline delete-form"
+                    data-title="<%= ev.title %>"
+                  >
+                    <input type="hidden" name="token" value="<%= ev.admin_token %>" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                      <i class="bi bi-trash"></i> Verwijderen
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  document.querySelectorAll('.delete-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      const title = form.dataset.title || 'dit event';
+      if (!confirm('Event "' + title + '" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+        e.preventDefault();
+      }
+    });
+  });
+</script>
