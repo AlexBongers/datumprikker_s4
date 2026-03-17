@@ -1,0 +1,451 @@
+<%- include('../partials/header', { pageTitle: event.title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+      <div>
+        <h2 class="mb-1"><i class="bi bi-calendar-event text-primary"></i> <%= event.title %></h2>
+        <% if (event.description) { %>
+          <p class="text-muted mb-0"><%= event.description %></p>
+        <% } %>
+      </div>
+      <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <span class="badge bg-primary fs-6 align-self-start">Beheerder</span>
+        <a href="/admin/events/<%= event.id %>/edit?token=<%= token %>" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-pencil"></i> Aanpassen
+        </a>
+        <form
+          action="/admin/events/<%= event.id %>/delete"
+          method="POST"
+          class="d-inline"
+          id="deleteEventForm"
+          data-title="<%= event.title %>"
+        >
+          <input type="hidden" name="token" value="<%= token %>" />
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button type="submit" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash"></i> Verwijderen
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success / error feedback -->
+    <% if (respond_success) { %>
+      <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i> Wijziging succesvol opgeslagen!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (respond_error) { %>
+      <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle"></i> <%= respond_error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
+    <!-- Register / edit ondernemer -->
+    <div class="card shadow-sm mb-4" id="registerCard">
+      <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-building-add"></i> <span id="registerCardTitle">Onderneming direct registreren</span></span>
+        <button class="btn btn-sm btn-link text-dark p-0 text-decoration-none" type="button"
+          data-bs-toggle="collapse" data-bs-target="#registerForm" aria-expanded="true">
+          <i class="bi bi-chevron-up" id="registerToggleIcon"></i>
+        </button>
+      </div>
+      <div class="collapse show" id="registerForm">
+        <div class="card-body">
+          <p class="text-muted small mb-3" id="registerHelp">
+            Ontvang je een aanmeldformulier per e-mail? Voer hier de gegevens en tijdslotvoorkeur van de onderneming in — geen link delen nodig.
+          </p>
+          <form action="/admin/events/<%= event.id %>/respond" method="POST" id="registerOndernemer">
+            <input type="hidden" name="token" value="<%= token %>" />
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+            <div class="row g-3 mb-3">
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Bedrijfsnaam <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="responder_name" id="field_name" placeholder="bijv. Opschudders" required />
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Contactpersoon</label>
+                <input type="text" class="form-control" name="contact_name" id="field_contact_name" placeholder="bijv. Mevr. S. van Hoof" />
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">E-mailadres</label>
+                <input type="email" class="form-control" name="contact_email" id="field_contact_email" placeholder="bijv. sanne@opschudders.nl" />
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Telefoonnummer</label>
+                <input type="tel" class="form-control" name="contact_phone" id="field_contact_phone" placeholder="bijv. 0614567789" />
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Locatievoorkeur</label>
+                <select class="form-select" name="location_preference" id="field_location">
+                  <option value="">— niet opgegeven —</option>
+                  <option value="Online (MS Teams)">Online (MS Teams)</option>
+                  <option value="Op locatie bij de onderneming">Op locatie bij de onderneming</option>
+                  <option value="Op locatie bij de HU">Op locatie bij de HU</option>
+                </select>
+              </div>
+            </div>
+
+            <label class="form-label fw-semibold">Tijdslotvoorkeur <span class="text-danger">*</span></label>
+            <% if (slots.length === 0) { %>
+              <p class="text-muted small">Geen tijdsloten beschikbaar.</p>
+            <% } else { %>
+              <div class="row g-2 mb-3">
+                <% for (const slot of slots) {
+                  const dt = new Date(slot.slot_datetime);
+                  const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
+                %>
+                <div class="col-sm-6 col-lg-4">
+                  <div class="form-check border rounded px-3 py-2">
+                    <input class="form-check-input" type="checkbox" name="slots[]" value="<%= slot.id %>" id="reg_slot_<%= slot.id %>" />
+                    <label class="form-check-label small user-select-none" for="reg_slot_<%= slot.id %>">
+                      <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) %></strong>
+                      &nbsp;<%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
+                    </label>
+                  </div>
+                </div>
+                <% } %>
+              </div>
+            <% } %>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-warning fw-semibold" id="registerSubmitBtn">
+                <i class="bi bi-building-check"></i> Onderneming registreren
+              </button>
+              <button type="button" class="btn btn-outline-secondary d-none" id="cancelEditBtn" onclick="cancelEdit()">
+                <i class="bi bi-x-circle"></i> Annuleren
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share links -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-share"></i> Deel deze links</span>
+        <button class="btn btn-sm btn-link text-white p-0 text-decoration-none" type="button"
+          data-bs-toggle="collapse" data-bs-target="#shareLinks">
+          <i class="bi bi-chevron-down"></i>
+        </button>
+      </div>
+      <div class="collapse show" id="shareLinks">
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Stuur de juiste link naar studenten en ondernemers zodat zij hun beschikbaarheid kunnen invullen.
+          </p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-mortarboard text-info"></i> Link voor studenten
+            </label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control font-monospace small"
+                id="studentLink"
+                value="<%= `${baseUrl}/events/${event.id}?type=student` %>"
+                readonly
+              />
+              <button class="btn btn-outline-secondary" onclick="copyLink('studentLink')" title="Kopieer link">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-briefcase text-warning"></i> Link voor ondernemers
+            </label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control font-monospace small"
+                id="ondernemerLink"
+                value="<%= `${baseUrl}/events/${event.id}?type=ondernemer` %>"
+                readonly
+              />
+              <button class="btn btn-outline-secondary" onclick="copyLink('ondernemerLink')" title="Kopieer link">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="form-label fw-semibold">
+              <i class="bi bi-shield-lock text-primary"></i> Beheerderslink (privé — niet delen)
+            </label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control font-monospace small"
+                id="adminLink"
+                value="<%= `${baseUrl}/admin/events/${event.id}?token=${token}` %>"
+                readonly
+              />
+              <button class="btn btn-outline-secondary" onclick="copyLink('adminLink')" title="Kopieer beheerderslink">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+            <div class="form-text text-warning">
+              <i class="bi bi-exclamation-triangle"></i> Bewaar deze link! Zonder dit token kun je het event niet meer beheren.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registered companies -->
+    <% if (companies.length > 0) { %>
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-warning text-dark">
+        <i class="bi bi-building"></i> Geregistreerde bedrijven
+        <span class="badge bg-dark ms-1"><%= companies.length %></span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Bedrijf</th>
+                <th>Contact</th>
+                <th>Tijdsloten</th>
+                <th class="text-end"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const c of companies) { %>
+              <tr>
+                <td>
+                  <span class="fw-semibold"><%= c.name %></span>
+                  <% if (c.location) { %>
+                    <br/><small class="text-muted"><i class="bi bi-geo-alt"></i> <%= c.location %></small>
+                  <% } %>
+                </td>
+                <td class="small">
+                  <% if (c.contactName) { %><div><i class="bi bi-person text-muted"></i> <%= c.contactName %></div><% } %>
+                  <% if (c.email) { %><div><a href="mailto:<%= c.email %>"><i class="bi bi-envelope text-muted"></i> <%= c.email %></a></div><% } %>
+                  <% if (c.phone) { %><div><a href="tel:<%= c.phone %>"><i class="bi bi-telephone text-muted"></i> <%= c.phone %></a></div><% } %>
+                  <% if (!c.contactName && !c.email && !c.phone) { %><span class="text-muted">—</span><% } %>
+                </td>
+                <td>
+                  <% const slotCount = c.slotIds.length; %>
+                  <span class="badge bg-secondary"><%= slotCount %> slot<%= slotCount !== 1 ? 'en' : '' %></span>
+                </td>
+                <td class="text-end">
+                  <div class="d-flex gap-1 justify-content-end">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary btn-sm edit-company-btn"
+                      data-name="<%= c.name %>"
+                      data-contact-name="<%= c.contactName %>"
+                      data-email="<%= c.email %>"
+                      data-phone="<%= c.phone %>"
+                      data-location="<%= c.location %>"
+                      data-slot-ids="<%= c.slotIds.join(',') %>"
+                      title="Gegevens aanpassen"
+                    >
+                      <i class="bi bi-pencil"></i> Aanpassen
+                    </button>
+                    <form action="/admin/events/<%= event.id %>/ondernemers/delete" method="POST" class="d-inline delete-company-form" data-name="<%= c.name %>">
+                      <input type="hidden" name="token" value="<%= token %>" />
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                      <input type="hidden" name="name" value="<%= c.name %>" />
+                      <button type="submit" class="btn btn-outline-danger btn-sm" title="Verwijderen">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Overview table -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table"></i> Beschikbaarheidsoverzicht</span>
+        <span class="badge bg-light text-dark"><%= slots.length %> tijdsloten</span>
+      </div>
+      <div class="card-body p-0">
+        <% if (slots.length === 0) { %>
+          <p class="text-muted p-4 mb-0">Geen tijdsloten gevonden.</p>
+        <% } else { %>
+          <div class="table-responsive">
+            <table class="table table-bordered mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Tijdslot</th>
+                  <th class="text-center"><i class="bi bi-mortarboard text-info"></i> Studenten</th>
+                  <th class="text-center"><i class="bi bi-briefcase text-warning"></i> Ondernemers</th>
+                  <th class="text-center"><i class="bi bi-arrow-left-right text-success"></i> Match</th>
+                </tr>
+              </thead>
+              <tbody>
+                 <% for (const slot of slots) {
+                  const sr = slotResponses[slot.id] || { students: [], ondernemers: [] };
+                  const isMatch = sr.students.length > 0 && sr.ondernemers.length > 0;
+                  const dt = new Date(slot.slot_datetime);
+                  const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
+                %>
+                <tr class="<%= isMatch ? 'table-success' : '' %>">
+                  <td>
+                    <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
+                    <br /><span class="text-muted">
+                      <%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %>
+                      <% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <% if (sr.students.length === 0) { %>
+                      <span class="text-muted small">—</span>
+                    <% } else { %>
+                      <% for (const s of sr.students) { %>
+                        <span class="badge bg-info text-dark me-1 mb-1"><%= s.name %></span>
+                      <% } %>
+                    <% } %>
+                  </td>
+                  <td class="text-center">
+                    <% if (sr.ondernemers.length === 0) { %>
+                      <span class="text-muted small">—</span>
+                    <% } else { %>
+                      <% for (const o of sr.ondernemers) { %>
+                        <div class="mb-1">
+                          <span class="badge bg-warning text-dark"><%= o.name %></span>
+                          <% if (o.contactName || o.email || o.phone || o.location) { %>
+                            <div class="text-muted" style="font-size:0.72rem; line-height:1.4;">
+                              <% if (o.contactName) { %><i class="bi bi-person"></i> <%= o.contactName %><br /><% } %>
+                              <% if (o.email) { %><a href="mailto:<%= o.email %>" class="text-reset"><i class="bi bi-envelope"></i> <%= o.email %></a><br /><% } %>
+                              <% if (o.phone) { %><a href="tel:<%= o.phone %>" class="text-reset"><i class="bi bi-telephone"></i> <%= o.phone %></a><br /><% } %>
+                              <% if (o.location) { %><i class="bi bi-geo-alt"></i> <%= o.location %><% } %>
+                            </div>
+                          <% } %>
+                        </div>
+                      <% } %>
+                    <% } %>
+                  </td>
+                  <td class="text-center">
+                    <% if (isMatch) { %>
+                      <span class="badge bg-success"><i class="bi bi-check-circle"></i> Match!</span>
+                    <% } else { %>
+                      <span class="text-muted small">—</span>
+                    <% } %>
+                  </td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="mt-3 text-center">
+      <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm me-2">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a href="/admin" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-plus-circle"></i> Nieuw event aanmaken
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Copy link utility ────────────────────────────────────────────────────
+  function copyLink(id) {
+    const input = document.getElementById(id);
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+      const btn = input.nextElementSibling;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-check text-success"></i>';
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    });
+  }
+
+  // ── Delete event confirmation ────────────────────────────────────────────
+  document.getElementById('deleteEventForm').addEventListener('submit', function (e) {
+    const title = this.dataset.title || 'dit event';
+    if (!confirm('Event "' + title + '" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+      e.preventDefault();
+    }
+  });
+
+  // ── Delete company confirmations ─────────────────────────────────────────
+  document.querySelectorAll('.delete-company-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      const name = form.dataset.name || 'dit bedrijf';
+      if (!confirm('Registratie van "' + name + '" verwijderen?')) {
+        e.preventDefault();
+      }
+    });
+  });
+
+  // ── Collapse toggle icon ─────────────────────────────────────────────────
+  document.getElementById('registerForm').addEventListener('show.bs.collapse', function () {
+    document.getElementById('registerToggleIcon').className = 'bi bi-chevron-up';
+  });
+  document.getElementById('registerForm').addEventListener('hide.bs.collapse', function () {
+    document.getElementById('registerToggleIcon').className = 'bi bi-chevron-down';
+  });
+
+  // ── Pre-fill form when editing existing company ───────────────────────────
+  document.querySelectorAll('.edit-company-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const name = btn.dataset.name || '';
+      const contactName = btn.dataset.contactName || '';
+      const email = btn.dataset.email || '';
+      const phone = btn.dataset.phone || '';
+      const location = btn.dataset.location || '';
+      const slotIds = btn.dataset.slotIds ? btn.dataset.slotIds.split(',').map(Number) : [];
+
+      // Fill text fields
+      document.getElementById('field_name').value = name;
+      document.getElementById('field_contact_name').value = contactName;
+      document.getElementById('field_contact_email').value = email;
+      document.getElementById('field_contact_phone').value = phone;
+      document.getElementById('field_location').value = location;
+
+      // Pre-check slot checkboxes
+      document.querySelectorAll('[name="slots[]"]').forEach(function (cb) {
+        cb.checked = slotIds.includes(parseInt(cb.value, 10));
+      });
+
+      // Update UI to indicate edit mode
+      document.getElementById('registerCardTitle').textContent = 'Onderneming aanpassen: ' + name;
+      document.getElementById('registerHelp').textContent = 'Pas de gegevens aan en sla op om de registratie bij te werken.';
+      document.getElementById('registerSubmitBtn').innerHTML = '<i class="bi bi-building-check"></i> Wijzigingen opslaan';
+      document.getElementById('cancelEditBtn').classList.remove('d-none');
+
+      // Expand form and scroll to it
+      const collapseEl = document.getElementById('registerForm');
+      if (typeof bootstrap !== 'undefined') {
+        bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
+      } else {
+        collapseEl.classList.add('show');
+      }
+      document.getElementById('registerCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // ── Cancel edit ──────────────────────────────────────────────────────────
+  function cancelEdit() {
+    document.getElementById('registerOndernemer').reset();
+    document.getElementById('registerCardTitle').textContent = 'Onderneming direct registreren';
+    document.getElementById('registerHelp').textContent =
+      'Ontvang je een aanmeldformulier per e-mail? Voer hier de gegevens en tijdslotvoorkeur van de onderneming in — geen link delen nodig.';
+    document.getElementById('registerSubmitBtn').innerHTML = '<i class="bi bi-building-check"></i> Onderneming registreren';
+    document.getElementById('cancelEditBtn').classList.add('d-none');
+  }
+</script>
+
+<%- include('../partials/footer') %>
