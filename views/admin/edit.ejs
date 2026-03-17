@@ -16,6 +16,7 @@
 
     <form action="/admin/events/<%= event.id %>/edit" method="POST" id="editForm">
       <input type="hidden" name="token" value="<%= token %>" />
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">

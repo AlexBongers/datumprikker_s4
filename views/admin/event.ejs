@@ -23,6 +23,7 @@
           data-title="<%= event.title %>"
         >
           <input type="hidden" name="token" value="<%= token %>" />
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
           <button type="submit" class="btn btn-outline-danger btn-sm">
             <i class="bi bi-trash"></i> Verwijderen
           </button>
@@ -60,6 +61,7 @@
           </p>
           <form action="/admin/events/<%= event.id %>/respond" method="POST" id="registerOndernemer">
             <input type="hidden" name="token" value="<%= token %>" />
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
             <div class="row g-3 mb-3">
               <div class="col-sm-6">
@@ -250,6 +252,7 @@
                     </button>
                     <form action="/admin/events/<%= event.id %>/ondernemers/delete" method="POST" class="d-inline delete-company-form" data-name="<%= c.name %>">
                       <input type="hidden" name="token" value="<%= token %>" />
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                       <input type="hidden" name="name" value="<%= c.name %>" />
                       <button type="submit" class="btn btn-outline-danger btn-sm" title="Verwijderen">
                         <i class="bi bi-trash"></i>
@@ -425,8 +428,11 @@
 
       // Expand form and scroll to it
       const collapseEl = document.getElementById('registerForm');
-      const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
-      bsCollapse.show();
+      if (typeof bootstrap !== 'undefined') {
+        bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
+      } else {
+        collapseEl.classList.add('show');
+      }
       document.getElementById('registerCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
