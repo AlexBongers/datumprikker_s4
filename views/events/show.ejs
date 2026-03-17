@@ -50,6 +50,7 @@
           <div class="card-body">
             <form action="/events/<%= event.id %>/respond" method="POST" id="availabilityForm">
               <input type="hidden" name="type" value="<%= responderType %>" />
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
               <div class="mb-3">
                 <label for="nameInput" class="form-label fw-semibold">

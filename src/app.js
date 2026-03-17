@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
 
@@ -42,6 +43,27 @@ app.use(
 // Apply rate limiting to all routes
 app.use('/admin', generalLimiter);
 app.use('/events', generalLimiter);
+
+// CSRF protection: generate a per-session token and expose it to all views.
+// All state-mutating forms must include a hidden _csrf field that matches.
+app.use((req, res, next) => {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+  }
+  res.locals.csrfToken = req.session.csrfToken;
+  next();
+});
+
+// Validate CSRF token on all mutating (non-GET/HEAD/OPTIONS) requests
+app.use((req, res, next) => {
+  const safe = ['GET', 'HEAD', 'OPTIONS'];
+  if (safe.includes(req.method)) return next();
+  const token = req.body && req.body._csrf;
+  if (!token || token !== req.session.csrfToken) {
+    return res.status(403).render('403');
+  }
+  next();
+});
 
 // Expose admin session state to all views
 app.use((req, res, next) => {
