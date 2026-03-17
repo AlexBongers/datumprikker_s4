@@ -30,14 +30,27 @@ Render connects directly to your GitHub repository and redeploys automatically e
 **Steps:**
 
 1. Push this repository to GitHub (it is already there).
-2. Go to <https://dashboard.render.com> → **New** → **Blueprint**.
+2. Go to <https://dashboard.render.com> → **New** → **Web Service**.
 3. Connect your GitHub account and select the `datumprikker_s4` repository.
-   Render will detect `render.yaml` automatically.
-4. In the "Environment Variables" section set **`BASE_URL`** to the URL Render
-   shows you (e.g. `https://datumprikker.onrender.com`).
-   `SESSION_SECRET` is generated for you automatically.
-5. Click **Apply** — Render builds and deploys the app.
-6. Visit your `.onrender.com` URL when the deploy is green ✅.
+4. **Important:** change the **Branch** field to `copilot/add-interview-scheduling-mechanism`
+   (all app code lives on this branch until the PR is merged into `main`).
+5. Set **Build Command** to `npm ci` and **Start Command** to `npm start`.
+6. Set **`BASE_URL`** env var to your `.onrender.com` URL.
+   `SESSION_SECRET` and `ADMIN_PASSWORD` are generated automatically from `render.yaml`.
+7. Click **Create Web Service** — Render builds and deploys the app.
+8. Visit your `.onrender.com` URL when the deploy is green ✅.
+
+#### Auto-deploy on every push (GitHub Actions)
+
+To make Render automatically redeploy whenever new code is pushed, set up the deploy hook secret:
+
+1. In **Render Dashboard** → your datumprikker service → **Settings** → **Build & Deploy** → **Deploy Hook** → click **Generate** → copy the URL.
+2. In **GitHub** → this repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
+   - Name: `RENDER_DEPLOY_HOOK_URL`
+   - Value: (paste the URL from step 1)
+3. Done — every push to this branch now triggers an automatic Render deploy via GitHub Actions.
+
+> **Note:** if you see "Deploy failed" in the Actions tab because the secret is not set yet, that's expected until you complete step 2 above.
 
 ---
 

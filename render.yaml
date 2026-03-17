@@ -15,8 +15,8 @@ services:
   - type: web
     name: datumprikker
     runtime: node
-    branch: copilot/add-interview-scheduling-mechanism   # deploy from this branch until PR is merged to main
-    buildCommand: npm install
+    branch: copilot/add-interview-scheduling-mechanism   # TODO: remove this line (or change to 'main') after merging the PR
+    buildCommand: npm ci
     startCommand: npm start
     plan: starter          # smallest paid plan; needed to attach a disk
     healthCheckPath: /
