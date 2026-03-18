@@ -25,26 +25,6 @@ function getEventByToken(id, token) {
   return event;
 }
 
-// Helper: build per-company map (name → { name, contactName, email, phone, location, slotIds })
-function buildCompanyMap(responses) {
-  const map = {};
-  for (const resp of responses) {
-    if (resp.responder_type !== 'ondernemer') continue;
-    if (!map[resp.responder_name]) {
-      map[resp.responder_name] = {
-        name: resp.responder_name,
-        contactName: resp.contact_name || '',
-        email: resp.contact_email || '',
-        phone: resp.contact_phone || '',
-        location: resp.location_preference || '',
-        slotIds: [],
-      };
-    }
-    map[resp.responder_name].slotIds.push(resp.time_slot_id);
-  }
-  return map;
-}
-
 // Dashboard login page
 router.get('/login', readLimiter, (req, res) => {
   if (req.session && req.session.isAdmin) return res.redirect('/admin/dashboard');
@@ -202,10 +182,6 @@ router.get('/events/:id', readLimiter, (req, res) => {
     }
   }
 
-  // Build per-company list for pre-fill / edit / delete
-  const companyMap = buildCompanyMap(responses);
-  const companies = Object.values(companyMap);
-
   const baseUrl =
     process.env.BASE_URL ||
     `${req.protocol}://${req.get('host')}`;
@@ -214,90 +190,9 @@ router.get('/events/:id', readLimiter, (req, res) => {
     event,
     slots,
     slotResponses,
-    companies,
     token,
     baseUrl,
-    respond_success: req.query.respond_success === '1',
-    respond_error: req.query.respond_error || null,
   });
-});
-
-// Admin registers an ondernemer's availability on their behalf
-router.post('/events/:id/respond', writeLimiter, (req, res) => {
-  const { id } = req.params;
-  const { token, responder_name, contact_name, contact_email, contact_phone, location_preference, slots } = req.body;
-
-  const event = getEventByToken(id, token);
-  if (!event) {
-    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
-    return exists ? res.status(403).render('403') : res.status(404).render('404');
-  }
-
-  const name = (responder_name || '').trim();
-  if (!name) {
-    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Vul+een+bedrijfsnaam+in.`);
-  }
-
-  const slotList = Array.isArray(slots) ? slots : (slots ? [slots] : []);
-  if (slotList.length === 0) {
-    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Selecteer+minimaal+één+tijdslot.`);
-  }
-
-  // Validate all slot IDs belong to this event
-  const validSlots = db
-    .prepare(`SELECT id FROM time_slots WHERE event_id = ? AND id IN (${slotList.map(() => '?').join(',')})`)
-    .all(id, ...slotList.map(Number));
-
-  if (validSlots.length === 0) {
-    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Ongeldige+tijdsloten.`);
-  }
-
-  const deleteOld = db.prepare(
-    `DELETE FROM responses WHERE event_id = ? AND responder_name = ? AND responder_type = 'ondernemer'`
-  );
-  const insertResponse = db.prepare(
-    `INSERT OR IGNORE INTO responses
-       (event_id, responder_name, responder_type, time_slot_id, contact_name, contact_email, contact_phone, location_preference)
-     VALUES (?, ?, 'ondernemer', ?, ?, ?, ?, ?)`
-  );
-
-  db.transaction(() => {
-    deleteOld.run(id, name);
-    for (const slot of validSlots) {
-      insertResponse.run(
-        id,
-        name,
-        slot.id,
-        (contact_name || '').trim() || null,
-        (contact_email || '').trim() || null,
-        (contact_phone || '').trim() || null,
-        (location_preference || '').trim() || null
-      );
-    }
-  })();
-
-  res.redirect(`/admin/events/${id}?token=${token}&respond_success=1`);
-});
-
-// Admin deletes a single ondernemer's registration
-router.post('/events/:id/ondernemers/delete', writeLimiter, (req, res) => {
-  const { id } = req.params;
-  const { token, name } = req.body;
-
-  const event = getEventByToken(id, token);
-  if (!event) {
-    const exists = db.prepare('SELECT id FROM events WHERE id = ?').get(id);
-    return exists ? res.status(403).render('403') : res.status(404).render('404');
-  }
-
-  const cleanName = (name || '').trim();
-  if (!cleanName) {
-    return res.redirect(`/admin/events/${id}?token=${token}&respond_error=Ongeldige+bedrijfsnaam.`);
-  }
-
-  db.prepare(`DELETE FROM responses WHERE event_id = ? AND responder_name = ? AND responder_type = 'ondernemer'`).run(id, cleanName);
-
-  res.redirect(`/admin/events/${id}?token=${token}&respond_success=1`);
 });
 
 // Edit event form
