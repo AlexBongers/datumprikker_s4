@@ -1,0 +1,239 @@
+<%
+  const typeLabel = responderType === 'student' ? 'Student' : responderType === 'ondernemer' ? 'Ondernemer' : null;
+  const typeColor = responderType === 'student' ? 'info' : 'warning';
+  const typeIcon = responderType === 'student' ? 'mortarboard' : 'briefcase';
+%>
+<%- include('../partials/header', { pageTitle: event.title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="mb-4">
+      <h2 class="mb-1">
+        <i class="bi bi-calendar-event text-primary"></i> <%= event.title %>
+      </h2>
+      <% if (event.description) { %>
+        <p class="text-muted mb-0"><%= event.description %></p>
+      <% } %>
+    </div>
+
+    <% if (success) { %>
+      <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i> Je beschikbaarheid is opgeslagen!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle"></i> <%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
+    <% if (!responderType) { %>
+      <!-- No type specified: show read-only overview -->
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        Gebruik de link die de beheerder met jou heeft gedeeld (met <code>?type=student</code> of <code>?type=ondernemer</code>) om je beschikbaarheid in te vullen.
+      </div>
+    <% } %>
+
+    <div class="row g-4">
+      <!-- Availability picker -->
+      <% if (responderType) { %>
+      <div class="col-lg-5">
+        <div class="card shadow-sm">
+          <div class="card-header bg-<%= typeColor %> text-dark">
+            <i class="bi bi-<%= typeIcon %>"></i>
+            Jouw beschikbaarheid (<%= typeLabel %>)
+          </div>
+          <div class="card-body">
+            <form action="/events/<%= event.id %>/respond" method="POST" id="availabilityForm">
+              <input type="hidden" name="type" value="<%= responderType %>" />
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+              <div class="mb-3">
+                <label for="nameInput" class="form-label fw-semibold">
+                  <% if (responderType === 'ondernemer') { %>Bedrijfsnaam<% } else { %>Jouw naam<% } %>
+                  <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nameInput"
+                  name="name"
+                  placeholder="<%= responderType === 'ondernemer' ? 'bijv. Opschudders' : 'Voer je naam in...' %>"
+                  required
+                />
+                <div class="form-text">
+                  <% if (responderType === 'ondernemer') { %>
+                    Vul de bedrijfsnaam in zodat de beheerder weet welk bedrijf beschikbaar is.
+                  <% } else { %>
+                    Vul je naam in zodat de beheerder weet wie beschikbaar is.
+                  <% } %>
+                </div>
+              </div>
+
+              <% if (responderType === 'ondernemer') { %>
+              <div class="border rounded p-3 mb-3 bg-light">
+                <p class="fw-semibold small mb-2"><i class="bi bi-building"></i> Contactgegevens <span class="fw-normal text-muted">(optioneel)</span></p>
+                <div class="mb-2">
+                  <label class="form-label form-label-sm">Contactpersoon</label>
+                  <input type="text" class="form-control form-control-sm" name="contact_name" placeholder="bijv. Mevr. S. van Hoof" />
+                </div>
+                <div class="mb-2">
+                  <label class="form-label form-label-sm">E-mailadres</label>
+                  <input type="email" class="form-control form-control-sm" name="contact_email" placeholder="bijv. sanne@opschudders.nl" />
+                </div>
+                <div class="mb-2">
+                  <label class="form-label form-label-sm">Telefoonnummer</label>
+                  <input type="tel" class="form-control form-control-sm" name="contact_phone" placeholder="bijv. 0614567789" />
+                </div>
+                <div>
+                  <label class="form-label form-label-sm">Locatievoorkeur</label>
+                  <select class="form-select form-select-sm" name="location_preference">
+                    <option value="">— niet opgegeven —</option>
+                    <option value="Online (MS Teams)">Online (MS Teams)</option>
+                    <option value="Op locatie bij de onderneming">Op locatie bij de onderneming</option>
+                    <option value="Op locatie bij de HU">Op locatie bij de HU</option>
+                  </select>
+                </div>
+              </div>
+              <% } %>
+
+              <label class="form-label fw-semibold">Klik op de momenten waarop je beschikbaar bent:</label>
+
+              <% if (slots.length === 0) { %>
+                <p class="text-muted">Geen tijdsloten beschikbaar.</p>
+              <% } else { %>
+                <div class="slot-picker">
+                  <% for (const slot of slots) {
+                    const dt = new Date(slot.slot_datetime);
+                    const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
+                  %>
+                  <div class="slot-option mb-2">
+                    <input
+                      type="checkbox"
+                      class="btn-check"
+                      name="slots[]"
+                      value="<%= slot.id %>"
+                      id="slot_<%= slot.id %>"
+                      autocomplete="off"
+                    />
+                    <label class="btn btn-outline-<%= typeColor %> text-start w-100" for="slot_<%= slot.id %>">
+                      <i class="bi bi-calendar3 me-2"></i>
+                      <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) %></strong>
+                      &mdash;
+                      <%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %>
+                      <% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
+                    </label>
+                  </div>
+                  <% } %>
+                </div>
+              <% } %>
+
+              <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-<%= typeColor %> text-dark fw-semibold">
+                  <i class="bi bi-check-circle"></i> Beschikbaarheid opslaan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Overview table -->
+      <div class="col-lg-<%= responderType ? '7' : '12' %>">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-table"></i> Overzicht beschikbaarheid</span>
+            <span class="badge bg-light text-dark"><%= slots.length %> slots</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (slots.length === 0) { %>
+              <p class="text-muted p-4 mb-0">Geen tijdsloten beschikbaar.</p>
+            <% } else { %>
+              <div class="table-responsive">
+                <table class="table table-bordered mb-0 align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Tijdslot</th>
+                      <th class="text-center">
+                        <i class="bi bi-mortarboard text-info"></i><br/>
+                        <small>Studenten</small>
+                      </th>
+                      <th class="text-center">
+                        <i class="bi bi-briefcase text-warning"></i><br/>
+                        <small>Ondernemers</small>
+                      </th>
+                      <th class="text-center">
+                        <i class="bi bi-arrow-left-right text-success"></i><br/>
+                        <small>Match</small>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% for (const slot of slots) {
+                      const sr = slotResponses[slot.id] || { students: [], ondernemers: [] };
+                      const isMatch = sr.students.length > 0 && sr.ondernemers.length > 0;
+                      const dt = new Date(slot.slot_datetime);
+                      const dtEnd = slot.slot_end_datetime ? new Date(slot.slot_end_datetime) : null;
+                    %>
+                    <tr class="<%= isMatch ? 'table-success' : '' %>">
+                      <td class="small">
+                        <strong><%= dt.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }) %></strong><br/>
+                        <span class="text-muted">
+                          <%= dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %>
+                          <% if (dtEnd) { %>&ndash;<%= dtEnd.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) %><% } %>
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <% if (sr.students.length === 0) { %>
+                          <span class="text-muted small">—</span>
+                        <% } else { %>
+                          <% for (const name of sr.students) { %>
+                            <span class="badge bg-info text-dark d-block mb-1"><%= name %></span>
+                          <% } %>
+                        <% } %>
+                      </td>
+                      <td class="text-center">
+                        <% if (sr.ondernemers.length === 0) { %>
+                          <span class="text-muted small">—</span>
+                        <% } else { %>
+                          <% for (const name of sr.ondernemers) { %>
+                            <span class="badge bg-warning text-dark d-block mb-1"><%= name %></span>
+                          <% } %>
+                        <% } %>
+                      </td>
+                      <td class="text-center">
+                        <% if (isMatch) { %>
+                          <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> Match!
+                          </span>
+                        <% } else { %>
+                          <span class="text-muted small">—</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="card mt-3 bg-light border-0">
+          <div class="card-body small text-muted">
+            <i class="bi bi-info-circle text-primary"></i>
+            <strong>Match</strong> betekent dat er minimaal één student én één ondernemer beschikbaar zijn op dat moment.
+            De groene tijdsloten zijn geschikte interviewmomenten.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

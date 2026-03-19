@@ -1,0 +1,237 @@
+<%- include('../partials/header', { pageTitle: 'Nieuw event aanmaken' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h2 class="mb-1"><i class="bi bi-calendar-plus text-primary"></i> Nieuw interview-event aanmaken</h2>
+    <p class="text-muted mb-4">Stel de beschikbare tijdsloten in voor de interviews.</p>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+    <% } %>
+
+    <form action="/admin/events" method="POST" id="eventForm">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-info-circle"></i> Event informatie
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="title" class="form-label fw-semibold">Titel <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              name="title"
+              value="<%= typeof title !== 'undefined' ? title : '' %>"
+              placeholder="bijv. Interviews Semester 4 - Groep A"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label fw-semibold">Beschrijving</label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              rows="2"
+              placeholder="Optionele beschrijving..."
+            ><%= typeof description !== 'undefined' ? description : '' %></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pre-fab slot picker -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-lightning-charge"></i> Snelle selectie — 24, 25 &amp; 26 maart 2026
+        </div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Vink de gewenste uurblokken aan. Ze worden automatisch meegenomen bij het aanmaken van het event.
+          </p>
+
+          <% const prefabDays = [
+            { label: 'Dinsdag 24 maart 2026',    date: '2026-03-24' },
+            { label: 'Woensdag 25 maart 2026',   date: '2026-03-25' },
+            { label: 'Donderdag 26 maart 2026',  date: '2026-03-26' },
+          ]; %>
+
+          <% for (const day of prefabDays) { %>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-semibold"><%= day.label %></span>
+              <button type="button" class="btn btn-link btn-sm p-0 toggle-day text-decoration-none" data-date="<%= day.date %>">
+                Alles selecteren
+              </button>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <% for (let h = 10; h < 16; h++) {
+                const startH = String(h).padStart(2, '0');
+                const endH   = String(h + 1).padStart(2, '0');
+                const startVal = day.date + 'T' + startH + ':00';
+                const endVal   = day.date + 'T' + endH   + ':00';
+                const cbId     = 'prefab_' + day.date + '_' + startH;
+              %>
+              <div class="form-check form-check-inline border rounded px-3 py-2 prefab-slot-option">
+                <input
+                  class="form-check-input prefab-slot"
+                  type="checkbox"
+                  id="<%= cbId %>"
+                  data-start="<%= startVal %>"
+                  data-end="<%= endVal %>"
+                />
+                <label class="form-check-label user-select-none" for="<%= cbId %>">
+                  <%= startH %>:00 &ndash; <%= endH %>:00
+                </label>
+              </div>
+              <% } %>
+            </div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-clock"></i> Handmatige tijdsloten
+        </div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Voeg extra tijdsloten toe of gebruik alleen de snelle selectie hierboven.
+          </p>
+
+          <div id="slotsContainer">
+            <div class="slot-row row g-2 mb-2 align-items-center">
+              <div class="col-sm-5">
+                <label class="form-label form-label-sm text-muted mb-1">Begintijd</label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  name="slots[]"
+                />
+              </div>
+              <div class="col-sm-5">
+                <label class="form-label form-label-sm text-muted mb-1">Eindtijd</label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  name="slots_end[]"
+                />
+              </div>
+              <div class="col-sm-auto mt-sm-4">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-slot" disabled>
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addSlot">
+            <i class="bi bi-plus-circle"></i> Tijdslot toevoegen
+          </button>
+        </div>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-check-circle"></i> Event aanmaken
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ── Manual slot add/remove ───────────────────────────────────────────────
+  document.getElementById('addSlot').addEventListener('click', function () {
+    const container = document.getElementById('slotsContainer');
+    const row = document.createElement('div');
+    row.className = 'slot-row row g-2 mb-2 align-items-center';
+    row.innerHTML = `
+      <div class="col-sm-5">
+        <label class="form-label form-label-sm text-muted mb-1">Begintijd</label>
+        <input type="datetime-local" class="form-control" name="slots[]" />
+      </div>
+      <div class="col-sm-5">
+        <label class="form-label form-label-sm text-muted mb-1">Eindtijd</label>
+        <input type="datetime-local" class="form-control" name="slots_end[]" />
+      </div>
+      <div class="col-sm-auto mt-sm-4">
+        <button type="button" class="btn btn-outline-danger btn-sm remove-slot">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    `;
+    container.appendChild(row);
+    updateRemoveButtons();
+  });
+
+  document.getElementById('slotsContainer').addEventListener('click', function (e) {
+    if (e.target.closest('.remove-slot')) {
+      e.target.closest('.slot-row').remove();
+      updateRemoveButtons();
+    }
+  });
+
+  function updateRemoveButtons() {
+    const rows = document.querySelectorAll('.slot-row');
+    rows.forEach((row) => {
+      const btn = row.querySelector('.remove-slot');
+      btn.disabled = rows.length === 1;
+    });
+  }
+
+  // ── Per-day "Alles selecteren" toggle ───────────────────────────────────
+  document.querySelectorAll('.toggle-day').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const date = btn.dataset.date;
+      const checkboxes = document.querySelectorAll('.prefab-slot[data-start^="' + date + '"]');
+      const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
+      checkboxes.forEach((cb) => { cb.checked = !allChecked; });
+      btn.textContent = allChecked ? 'Alles selecteren' : 'Alles deselecteren';
+    });
+  });
+
+  // Keep toggle label in sync when individual checkboxes change
+  document.querySelectorAll('.prefab-slot').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      const date = cb.dataset.start.slice(0, 10);
+      const btn = document.querySelector('.toggle-day[data-date="' + date + '"]');
+      if (!btn) return;
+      const siblings = document.querySelectorAll('.prefab-slot[data-start^="' + date + '"]');
+      const allChecked = Array.from(siblings).every((s) => s.checked);
+      btn.textContent = allChecked ? 'Alles deselecteren' : 'Alles selecteren';
+    });
+  });
+
+  // ── Inject prefab slots as hidden fields on submit ───────────────────────
+  document.getElementById('eventForm').addEventListener('submit', function (e) {
+    const checkedPrefabs = document.querySelectorAll('.prefab-slot:checked');
+    const manualStarts   = document.querySelectorAll('#slotsContainer input[name="slots[]"]');
+    const hasManual      = Array.from(manualStarts).some((i) => i.value.trim() !== '');
+
+    if (checkedPrefabs.length === 0 && !hasManual) {
+      e.preventDefault();
+      alert('Selecteer minimaal één tijdslot via de snelle selectie of voeg een handmatig tijdslot toe.');
+      return;
+    }
+
+    checkedPrefabs.forEach(function (cb) {
+      const hiddenStart = document.createElement('input');
+      hiddenStart.type  = 'hidden';
+      hiddenStart.name  = 'slots[]';
+      hiddenStart.value = cb.dataset.start;
+
+      const hiddenEnd = document.createElement('input');
+      hiddenEnd.type  = 'hidden';
+      hiddenEnd.name  = 'slots_end[]';
+      hiddenEnd.value = cb.dataset.end;
+
+      document.getElementById('eventForm').appendChild(hiddenStart);
+      document.getElementById('eventForm').appendChild(hiddenEnd);
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

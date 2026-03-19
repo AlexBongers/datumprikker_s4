@@ -1,0 +1,37 @@
+# Render.com deployment configuration
+# https://render.com/docs/blueprint-spec
+#
+# Deploy steps:
+#   1. Push this repo to GitHub.
+#   2. Go to https://dashboard.render.com/select-repo
+#   3. Pick this repository – Render will detect render.yaml automatically.
+#   4. Set SESSION_SECRET to a long random string under "Environment".
+#   5. Click "Deploy".
+#
+# The disk below ($0.25 / GB / month, minimum $1) keeps your SQLite database
+# alive across deploys and restarts.  Without it every restart loses all data.
+
+services:
+  - type: web
+    name: datumprikker
+    runtime: node
+    branch: copilot/add-interview-scheduling-mechanism   # TODO: remove this line (or change to 'main') after merging the PR
+    buildCommand: npm ci
+    startCommand: npm start
+    plan: starter          # smallest paid plan; needed to attach a disk
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true   # Render generates a secure random value
+      - key: DATABASE_PATH
+        value: /data/datumprikker.db
+      - key: BASE_URL
+        value: https://datumprikker.onrender.com
+      - key: ADMIN_PASSWORD
+        generateValue: true   # Render generates a secure random value; check it in the dashboard
+    disk:
+      name: datumprikker-data
+      mountPath: /data
+      sizeGB: 1
