@@ -239,21 +239,67 @@ router.post('/events/:id/edit', writeLimiter, (req, res) => {
     });
   }
 
-  const updateEvent = db.prepare(
-    'UPDATE events SET title = ?, description = ? WHERE id = ?'
-  );
-  const deleteSlots = db.prepare('DELETE FROM time_slots WHERE event_id = ?');
+  // Smart slot update: match existing slots by start datetime so that
+  // responses for unchanged slots are preserved. Slots no longer present
+  // in the submitted list have their responses deleted first (required
+  // because better-sqlite3 enforces foreign-key constraints by default).
+  const currentSlots = db
+    .prepare('SELECT id, slot_datetime, slot_end_datetime FROM time_slots WHERE event_id = ?')
+    .all(id);
+
+  // Build lookup: start-datetime → existing slot row
+  const currentByStart = new Map();
+  for (const slot of currentSlots) {
+    if (!currentByStart.has(slot.slot_datetime)) {
+      currentByStart.set(slot.slot_datetime, slot);
+    }
+  }
+
+  const keptIds = new Set();
+  const toInsert = [];
+
+  for (let i = 0; i < slotList.length; i++) {
+    const start = slotList[i]?.trim();
+    const end = (slotEndList[i] || '').trim() || null;
+    if (!start) continue;
+
+    if (currentByStart.has(start)) {
+      keptIds.add(currentByStart.get(start).id);
+    } else {
+      toInsert.push({ start, end });
+    }
+  }
+
+  const removedSlots = currentSlots.filter((s) => !keptIds.has(s.id));
+
+  const updateEvent = db.prepare('UPDATE events SET title = ?, description = ? WHERE id = ?');
+  const deleteResponsesForSlot = db.prepare('DELETE FROM responses WHERE time_slot_id = ?');
+  const deleteSlot = db.prepare('DELETE FROM time_slots WHERE id = ?');
+  const updateEndTime = db.prepare('UPDATE time_slots SET slot_end_datetime = ? WHERE id = ?');
   const insertSlot = db.prepare(
     'INSERT INTO time_slots (event_id, slot_datetime, slot_end_datetime) VALUES (?, ?, ?)'
   );
 
   db.transaction(() => {
     updateEvent.run(title, description || '', id);
-    deleteSlots.run(id);
+
+    // Remove slots that are no longer in the submitted list (responses first)
+    for (const slot of removedSlots) {
+      deleteResponsesForSlot.run(slot.id);
+      deleteSlot.run(slot.id);
+    }
+
+    // Update end times for kept slots (start time unchanged, end may differ)
     for (let i = 0; i < slotList.length; i++) {
       const start = slotList[i]?.trim();
       const end = (slotEndList[i] || '').trim() || null;
-      if (start) insertSlot.run(id, start, end);
+      if (!start || !currentByStart.has(start)) continue;
+      updateEndTime.run(end, currentByStart.get(start).id);
+    }
+
+    // Insert brand-new slots
+    for (const { start, end } of toInsert) {
+      insertSlot.run(id, start, end);
     }
   })();
 
