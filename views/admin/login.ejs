@@ -1,0 +1,18 @@
+<%- include('../partials/header', { pageTitle: 'Login' }) %>
+<section class="narrow-shell">
+  <div class="card-panel">
+    <span class="eyebrow">Organiser area</span>
+    <h1>Log in op het dashboard</h1>
+    <p class="muted">Gebruik het beheerderswachtwoord om events aan te maken en bestaande planningen te beheren.</p>
+    <% if (error) { %>
+      <div class="alert-banner danger"><%= error %></div>
+    <% } %>
+    <form action="/admin/login" method="POST" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label class="field-label" for="password">Wachtwoord</label>
+      <input id="password" type="password" name="password" class="text-input" required />
+      <button class="primary-button" type="submit">Inloggen</button>
+    </form>
+  </div>
+</section>
+<%- include('../partials/footer') %>

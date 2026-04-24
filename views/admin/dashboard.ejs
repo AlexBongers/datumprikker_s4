@@ -1,0 +1,66 @@
+<%- include('../partials/header', { pageTitle: 'Dashboard' }) %>
+<section class="page-header-row">
+  <div>
+    <span class="eyebrow">Organizer dashboard</span>
+    <h1>Alle events in één overzicht</h1>
+    <p class="muted">Zie in één oogopslag hoeveel reacties er binnen zijn en welke events al een sterke match hebben.</p>
+  </div>
+  <a href="/admin" class="primary-button">Nieuw event</a>
+</section>
+
+<section class="summary-grid">
+  <article class="card-panel metric-card"><strong><%= totals.events %></strong><span>Events</span></article>
+  <article class="card-panel metric-card"><strong><%= totals.invitees %></strong><span>Deelnemers</span></article>
+  <article class="card-panel metric-card"><strong><%= totals.responses %></strong><span>Reagerend</span></article>
+  <article class="card-panel metric-card"><strong><%= totals.matches %></strong><span>Sterke matches</span></article>
+</section>
+
+<section class="card-panel table-panel">
+  <% if (events.length === 0) { %>
+    <div class="empty-state">
+      <h2>Nog geen events</h2>
+      <p>Start met je eerste datumprikker en voeg direct meerdere deelnemers en datumopties toe.</p>
+      <a href="/admin" class="primary-button">Maak een event</a>
+    </div>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Status</th>
+          <th>Reacties</th>
+          <th>Beste optie</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const event of events) { %>
+          <tr>
+            <td>
+              <strong><%= event.title %></strong>
+              <div class="meta-list">
+                <span><%= helpers.formatRelativeState(event.status) %></span>
+                <span><%= event.slot_count %> opties</span>
+                <span><%= event.invitee_count %> deelnemers</span>
+              </div>
+            </td>
+            <td><span class="status-pill <%= event.status %>"><%= helpers.formatRelativeState(event.status) %></span></td>
+            <td><%= event.responded_invitee_count %> / <%= event.invitee_count %></td>
+            <td>
+              <% if (event.best_slot) { %>
+                <div><strong><%= helpers.formatDateTimeRange(event.best_slot.slot_datetime, event.best_slot.slot_end_datetime, event.timezone) %></strong></div>
+                <small class="muted"><%= event.best_slot.explanation %></small>
+              <% } else { %>
+                <span class="muted">Nog geen data</span>
+              <% } %>
+            </td>
+            <td class="align-right">
+              <a class="secondary-button" href="/admin/events/<%= event.id %>?token=<%= event.admin_token %>">Open event</a>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

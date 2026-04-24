@@ -1,0 +1,172 @@
+<%- include('../partials/header', { pageTitle: event.title }) %>
+<section class="page-header-row">
+  <div>
+    <span class="eyebrow">Event workspace</span>
+    <h1><%= event.title %></h1>
+    <p class="muted"><%= event.description || 'Nog geen extra beschrijving.' %></p>
+    <div class="meta-list">
+      <span><%= helpers.formatRelativeState(event.status) %></span>
+      <span><%= event.location_mode %></span>
+      <span><%= helpers.formatDeadlineLabel(event.response_deadline, event.timezone) %></span>
+    </div>
+  </div>
+  <div class="button-group wrap">
+    <a href="/admin/events/<%= event.id %>/edit?token=<%= token %>" class="secondary-button">Bewerk event</a>
+    <form action="/admin/events/<%= event.id %>/duplicate" method="POST" class="inline-form">
+      <input type="hidden" name="token" value="<%= token %>" />
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button class="secondary-button" type="submit">Dupliceer</button>
+    </form>
+  </div>
+</section>
+
+<section class="summary-grid">
+  <article class="card-panel metric-card"><strong><%= stats.inviteeCount %></strong><span>Deelnemers</span></article>
+  <article class="card-panel metric-card"><strong><%= stats.respondedInvitees %></strong><span>Gereageerd</span></article>
+  <article class="card-panel metric-card"><strong><%= stats.pendingInvitees %></strong><span>Nog open</span></article>
+  <article class="card-panel metric-card"><strong><%= stats.strongMatches %></strong><span>Sterke matches</span></article>
+</section>
+
+<section class="content-grid two-columns">
+  <div class="stack-lg">
+    <article class="card-panel">
+      <div class="row-space">
+        <h2>Deel links</h2>
+        <span class="status-pill <%= event.status %>"><%= helpers.formatRelativeState(event.status) %></span>
+      </div>
+      <div class="stack compact">
+        <label class="field-label">Privé beheerderslink</label>
+        <div class="copy-row">
+          <input class="text-input" id="adminLink" readonly value="<%= `${baseUrl}/admin/events/${event.id}?token=${token}` %>" />
+          <button class="secondary-button" type="button" data-copy="adminLink">Kopieer</button>
+        </div>
+        <% if (event.finalized_slot_id) { %>
+          <a class="secondary-button" href="/events/<%= event.id %>/export?token=<%= token %>">Download kalenderbestand (.ics)</a>
+        <% } %>
+      </div>
+    </article>
+
+    <article class="card-panel">
+      <div class="row-space">
+        <h2>Ranglijst datumopties</h2>
+        <% if (bestSlot) { %><span class="eyebrow">Aanbevolen: <%= helpers.formatDateLabel(bestSlot.slot_datetime, 'nl-NL', event.timezone) %></span><% } %>
+      </div>
+      <div class="stack">
+        <% for (const slot of rankedSlots) { %>
+          <div class="rank-card <%= slot.isFinalized ? 'finalized' : slot === bestSlot ? 'recommended' : '' %>">
+            <div>
+              <strong><%= helpers.formatDateTimeRange(slot.slot_datetime, slot.slot_end_datetime, event.timezone) %></strong>
+              <p><%= slot.explanation %></p>
+              <div class="meta-list">
+                <span>Score <%= slot.score %></span>
+                <span><%= slot.summary.preferred %> voorkeur</span>
+                <span><%= slot.summary.available %> beschikbaar</span>
+                <span><%= slot.summary.if_needed %> indien nodig</span>
+              </div>
+            </div>
+            <div class="button-group vertical">
+              <% if (slot.isFinalized) { %>
+                <span class="status-pill finalized">Definitief</span>
+              <% } else { %>
+                <form action="/admin/events/<%= event.id %>/finalize" method="POST" class="inline-form">
+                  <input type="hidden" name="token" value="<%= token %>" />
+                  <input type="hidden" name="slot_id" value="<%= slot.id %>" />
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button class="primary-button" type="submit">Maak definitief</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </article>
+
+    <article class="card-panel">
+      <div class="row-space">
+        <h2>Activiteit</h2>
+        <form action="/admin/events/<%= event.id %>/remind" method="POST" class="inline-form">
+          <input type="hidden" name="token" value="<%= token %>" />
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button class="secondary-button" type="submit">Markeer reminder</button>
+        </form>
+      </div>
+      <ul class="timeline-list">
+        <% for (const item of activities) { %>
+          <li>
+            <strong><%= item.actor_label %></strong>
+            <span><%= item.details || item.action %></span>
+            <small class="muted"><%= new Date(item.created_at).toLocaleString('nl-NL') %></small>
+          </li>
+        <% } %>
+      </ul>
+    </article>
+  </div>
+
+  <div class="stack-lg">
+    <article class="card-panel">
+      <div class="row-space">
+        <h2>Deelnemers</h2>
+        <span class="muted"><%= invitees.length %> totaal</span>
+      </div>
+      <div class="stack compact">
+        <% for (const invitee of invitees) { %>
+          <div class="participant-card">
+            <div>
+              <strong><%= invitee.name %></strong>
+              <div class="meta-list">
+                <span><%= invitee.role %></span>
+                <% if (invitee.organization) { %><span><%= invitee.organization %></span><% } %>
+                <% if (invitee.is_required) { %><span>Verplicht</span><% } %>
+                <% if (invitee.responded_at) { %><span>Gereageerd</span><% } else { %><span>Nog open</span><% } %>
+              </div>
+              <div class="copy-row compact">
+                <input class="text-input" id="invite-<%= invitee.id %>" readonly value="<%= `${baseUrl}/events/respond/${invitee.invite_token}` %>" />
+                <button class="secondary-button" type="button" data-copy="invite-<%= invitee.id %>">Kopieer link</button>
+              </div>
+            </div>
+            <form action="/admin/events/<%= event.id %>/invitees/<%= invitee.id %>/delete" method="POST" class="inline-form danger-inline">
+              <input type="hidden" name="token" value="<%= token %>" />
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button class="ghost-button danger" type="submit">Verwijder</button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+    </article>
+
+    <article class="card-panel">
+      <h2>Voeg deelnemer toe</h2>
+      <form action="/admin/events/<%= event.id %>/invitees" method="POST" class="stack compact">
+        <input type="hidden" name="token" value="<%= token %>" />
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input class="text-input" name="name" placeholder="Naam" required />
+        <select class="text-input" name="role">
+          <option value="student">Student</option>
+          <option value="ondernemer">Ondernemer</option>
+        </select>
+        <input class="text-input" name="email" placeholder="E-mail (optioneel)" />
+        <input class="text-input" name="phone" placeholder="Telefoon (optioneel)" />
+        <input class="text-input" name="organization" placeholder="Organisatie / context" />
+        <label class="checkbox-line"><input type="checkbox" name="is_required" value="1" /> Verplicht voor beste match</label>
+        <button class="primary-button" type="submit">Deelnemer toevoegen</button>
+      </form>
+    </article>
+
+    <article class="card-panel">
+      <div class="button-group wrap">
+        <form action="/admin/events/<%= event.id %>/archive" method="POST" class="inline-form">
+          <input type="hidden" name="token" value="<%= token %>" />
+          <input type="hidden" name="status" value="<%= event.status === 'archived' ? 'open' : 'archived' %>" />
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button class="secondary-button" type="submit"><%= event.status === 'archived' ? 'Heropen event' : 'Archiveer event' %></button>
+        </form>
+        <form action="/admin/events/<%= event.id %>/delete" method="POST" class="inline-form" data-confirm="Weet je zeker dat je dit event wilt verwijderen?">
+          <input type="hidden" name="token" value="<%= token %>" />
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button class="ghost-button danger" type="submit">Verwijder event</button>
+        </form>
+      </div>
+    </article>
+  </div>
+</section>
+<%- include('../partials/footer') %>

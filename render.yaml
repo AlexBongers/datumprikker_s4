@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: datumprikker-matchmaker
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /data/datumprikker.db
+      - key: BASE_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        generateValue: true
+    disk:
+      name: datumprikker-data
+      mountPath: /data
+      sizeGB: 1
