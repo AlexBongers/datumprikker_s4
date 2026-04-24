@@ -57,6 +57,7 @@
         <div class="dynamic-row two-up">
           <input type="datetime-local" class="text-input" name="slots[]" value="<%= slot.slot_datetime.slice(0, 16) %>" required />
           <input type="datetime-local" class="text-input" name="slots_end[]" value="<%= slot.slot_end_datetime ? slot.slot_end_datetime.slice(0, 16) : '' %>" />
+          <button type="button" class="ghost-button danger" data-remove-row>Verwijder</button>
         </div>
       <% } %>
     </div>

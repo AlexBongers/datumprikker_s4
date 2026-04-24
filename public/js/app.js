@@ -27,11 +27,11 @@ function addInviteeRow() {
   const row = document.createElement('div');
   row.className = 'dynamic-row invitee-row';
   row.innerHTML = `
-    <input class="text-input" name="invitee_name" placeholder="Naam" />
-    <select class="text-input" name="invitee_role"><option value="student">Student</option><option value="ondernemer">Ondernemer</option></select>
-    <input class="text-input" name="invitee_email" placeholder="E-mail (optioneel)" />
-    <input class="text-input" name="invitee_phone" placeholder="Telefoon (optioneel)" />
-    <input class="text-input" name="invitee_organization" placeholder="Organisatie / context" />
+    <input class="text-input" name="invitee_name[]" placeholder="Naam" />
+    <select class="text-input" name="invitee_role[]"><option value="student">Student</option><option value="ondernemer">Ondernemer</option></select>
+    <input class="text-input" name="invitee_email[]" placeholder="E-mail (optioneel)" />
+    <input class="text-input" name="invitee_phone[]" placeholder="Telefoon (optioneel)" />
+    <input class="text-input" name="invitee_organization[]" placeholder="Organisatie / context" />
     <label class="checkbox-line"><input type="checkbox" name="invitee_required" value="${index}" /> Verplicht voor beste match</label>
   `;
   row.appendChild(removeRowButton(row));
@@ -41,11 +41,21 @@ function addInviteeRow() {
 window.datumprikkerCreateForm = function () {
   document.querySelector('[data-add-row="slotRows"]')?.addEventListener('click', () => addSlotRow('slotRows'));
   document.querySelector('[data-add-row="inviteeRows"]')?.addEventListener('click', addInviteeRow);
+  document.getElementById('eventForm')?.addEventListener('submit', () => {
+    document.querySelectorAll('#inviteeRows .invitee-row').forEach((row, index) => {
+      const checkbox = row.querySelector('input[name="invitee_required"]');
+      if (checkbox) checkbox.value = String(index);
+    });
+  });
 };
 
 window.datumprikkerEditForm = function () {
   document.querySelector('[data-add-row="slotRows"]')?.addEventListener('click', () => addSlotRow('slotRows'));
 };
+
+document.querySelectorAll('[data-remove-row]').forEach((button) => {
+  button.addEventListener('click', () => button.closest('.dynamic-row')?.remove());
+});
 
 document.querySelectorAll('[data-copy]').forEach((button) => {
   button.addEventListener('click', async () => {
