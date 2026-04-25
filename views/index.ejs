@@ -4,17 +4,19 @@
     <span class="eyebrow">Datumprikker</span>
     <h1>Samen een datum kiezen.</h1>
     <p>Maak een event, deel links en kies daarna de beste optie.</p>
+    <div class="hero-divider" aria-hidden="true"></div>
     <div class="hero-actions">
       <a href="/admin/login" class="primary-button">Open dashboard</a>
       <button type="button" class="secondary-button" data-help-toggle>Hoe werkt het?</button>
     </div>
     <div class="mini-stats">
-      <span>Maak</span>
-      <span>Deel</span>
-      <span>Kies</span>
+      <span>Event aanmaken</span>
+      <span>Link delen</span>
+      <span>Datum kiezen</span>
     </div>
   </div>
   <div class="hero-card card-panel">
+    <span class="section-label">Direct openen</span>
     <h2>Heb je al een link?</h2>
     <form class="stack" onsubmit="event.preventDefault(); window.location.href = this.inviteLink.value.trim();">
       <label class="field-label" for="inviteLink">Plak je uitnodiging</label>
@@ -28,16 +30,24 @@
   </div>
 </section>
 
-<section class="content-grid tidy-grid">
-  <article class="card-panel">
+<section class="section-intro">
+  <span class="section-label">Overzicht</span>
+  <h2>In drie stappen geregeld.</h2>
+</section>
+
+<section class="content-grid feature-grid">
+  <article class="card-panel feature-card">
+    <span class="feature-index">01</span>
     <h3>Voor organisatoren</h3>
     <p>Nieuw event, datumopties, deelnemers.</p>
   </article>
-  <article class="card-panel">
+  <article class="card-panel feature-card">
+    <span class="feature-index">02</span>
     <h3>Voor deelnemers</h3>
     <p>Eén link, snel reageren, later aanpassen.</p>
   </article>
-  <article class="card-panel">
+  <article class="card-panel feature-card">
+    <span class="feature-index">03</span>
     <h3>Voor de keuze</h3>
     <p>De beste datum staat vanzelf bovenaan.</p>
   </article>
