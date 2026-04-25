@@ -261,13 +261,22 @@ code {
 .mini-stats,
 .button-group.wrap { display: flex; gap: 0.65rem; flex-wrap: wrap; }
 .mini-stats { margin-top: 1rem; }
-.mini-stats span {
+.mini-stats span,
+.mini-stat-link {
   padding: 0.45rem 0.75rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink-soft);
   border: 1px solid rgba(215, 25, 32, 0.1);
   font-weight: 600;
+}
+.mini-stat-link {
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+.mini-stat-link:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(215, 25, 32, 0.28);
+  transform: translateY(-1px);
 }
 .hero-divider {
   width: min(100%, 13rem);
@@ -546,6 +555,23 @@ code {
 .feature-card p {
   max-width: 18rem;
   margin: 0;
+}
+
+.feature-cta {
+  display: inline-flex;
+  margin-top: 1rem;
+  padding: 0.42rem 0.82rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary-strong);
+  background: var(--primary-soft);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.feature-cta:hover {
+  background: rgba(215, 25, 32, 0.16);
+  transform: translateY(-1px);
 }
 
 .form-section,

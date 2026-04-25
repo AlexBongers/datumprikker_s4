@@ -9,8 +9,13 @@
       <a href="/admin/login" class="primary-button">Open dashboard</a>
       <button type="button" class="secondary-button" data-help-toggle>Hoe werkt het?</button>
     </div>
+    <div class="mini-stats">
+      <a href="/admin" class="mini-stat-link">Event aanmaken</a>
+      <a href="/admin/dashboard" class="mini-stat-link">Link delen</a>
+      <a href="#invite-section" class="mini-stat-link">Datum kiezen</a>
+    </div>
   </div>
-  <div class="hero-card card-panel">
+  <div class="hero-card card-panel" id="invite-section">
     <span class="section-label">Direct openen</span>
     <h2>Heb je al een link?</h2>
     <form class="stack" onsubmit="event.preventDefault(); window.location.href = this.inviteLink.value.trim();">
@@ -31,16 +36,19 @@
     <span class="feature-index">01</span>
     <h3>Voor organisatoren</h3>
     <p>Nieuw event, datumopties, deelnemers.</p>
+    <a href="/admin" class="feature-cta">Event aanmaken →</a>
   </article>
   <article class="card-panel feature-card">
     <span class="feature-index">02</span>
     <h3>Voor deelnemers</h3>
     <p>Eén link, snel reageren, later aanpassen.</p>
+    <a href="#invite-section" class="feature-cta">Datum kiezen →</a>
   </article>
   <article class="card-panel feature-card">
     <span class="feature-index">03</span>
     <h3>Voor de keuze</h3>
     <p>De beste datum staat vanzelf bovenaan.</p>
+    <a href="/admin/dashboard" class="feature-cta">Link delen →</a>
   </article>
 </section>
 <%- include('partials/footer') %>
