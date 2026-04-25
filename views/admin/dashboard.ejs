@@ -2,8 +2,7 @@
 <section class="page-header-row">
   <div>
     <span class="eyebrow">Organizer dashboard</span>
-    <h1>Alle events in één overzicht</h1>
-    <p class="muted">Zie in één oogopslag hoeveel reacties er binnen zijn en welke events al een sterke match hebben.</p>
+    <h1>Overzicht</h1>
   </div>
   <a href="/admin" class="primary-button">Nieuw event</a>
 </section>
@@ -39,7 +38,6 @@
             <td>
               <strong><%= event.title %></strong>
               <div class="meta-list">
-                <span><%= helpers.formatRelativeState(event.status) %></span>
                 <span><%= event.slot_count %> opties</span>
                 <span><%= event.invitee_count %> deelnemers</span>
               </div>

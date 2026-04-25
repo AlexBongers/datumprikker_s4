@@ -2,16 +2,50 @@
   <footer class="site-footer">
     <div class="container footer-shell">
       <div>
-        <strong>Datumprikker Matchmaker</strong>
-        <p>Een warmere, duidelijkere datumplanner voor groepen, interviews en samenwerkingen.</p>
+        <strong>Datumprikker</strong>
+        <p>Lokaal te draaien, eenvoudig te delen.</p>
       </div>
       <div class="footer-meta">
-        <span>Render-ready</span>
-        <span>SQLite met persistente disk</span>
-        <span>Mobielvriendelijk</span>
+        <span>Node + Express</span>
+        <span>SQLite</span>
+        <span>Laptopvriendelijk</span>
       </div>
     </div>
   </footer>
+  <div class="help-backdrop" data-help-close hidden></div>
+  <aside class="help-dialog" id="helpDialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+    <div class="help-card">
+      <div class="row-space">
+        <div>
+          <span class="eyebrow">Help</span>
+          <h2 id="helpTitle">Zo werkt de app</h2>
+        </div>
+        <button type="button" class="ghost-button" data-help-close>Sluiten</button>
+      </div>
+      <div class="stack compact">
+        <div class="help-step">
+          <strong>1. Maak een event</strong>
+          <p>Kies een titel en voeg datumopties toe.</p>
+        </div>
+        <div class="help-step">
+          <strong>2. Deel links</strong>
+          <p>Iedere deelnemer krijgt een eigen link om later terug te komen.</p>
+        </div>
+        <div class="help-step">
+          <strong>3. Verzamel reacties</strong>
+          <p>Deelnemers markeren per optie wat hun voorkeur is of wat nog kan.</p>
+        </div>
+        <div class="help-step">
+          <strong>4. Kies het beste moment</strong>
+          <p>Het dashboard rangschikt opties en laat de sterkste match bovenaan zien.</p>
+        </div>
+      </div>
+      <div class="tip-box">
+        <strong>Lokaal draaien</strong>
+        <p><code>npm ci</code> → <code>cp .env.example .env</code> → <code>npm run local</code></p>
+      </div>
+    </div>
+  </aside>
   <script src="/js/app.js"></script>
 </body>
 </html>

@@ -57,6 +57,28 @@ document.querySelectorAll('[data-remove-row]').forEach((button) => {
   button.addEventListener('click', () => button.closest('.dynamic-row')?.remove());
 });
 
+const helpDialog = document.getElementById('helpDialog');
+const helpBackdrop = document.querySelector('.help-backdrop');
+
+function setHelpOpen(isOpen) {
+  if (!helpDialog || !helpBackdrop) return;
+  helpDialog.hidden = !isOpen;
+  helpBackdrop.hidden = !isOpen;
+  document.body.classList.toggle('help-open', isOpen);
+}
+
+document.querySelectorAll('[data-help-toggle]').forEach((button) => {
+  button.addEventListener('click', () => setHelpOpen(true));
+});
+
+document.querySelectorAll('[data-help-close]').forEach((button) => {
+  button.addEventListener('click', () => setHelpOpen(false));
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') setHelpOpen(false);
+});
+
 document.querySelectorAll('[data-copy]').forEach((button) => {
   button.addEventListener('click', async () => {
     const input = document.getElementById(button.dataset.copy);

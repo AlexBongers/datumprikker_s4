@@ -3,7 +3,7 @@
   <div>
     <span class="eyebrow">Event workspace</span>
     <h1><%= event.title %></h1>
-    <p class="muted"><%= event.description || 'Nog geen extra beschrijving.' %></p>
+    <% if (event.description) { %><p class="muted"><%= event.description %></p><% } %>
     <div class="meta-list">
       <span><%= helpers.formatRelativeState(event.status) %></span>
       <span><%= event.location_mode %></span>
@@ -31,11 +31,11 @@
   <div class="stack-lg">
     <article class="card-panel">
       <div class="row-space">
-        <h2>Deel links</h2>
+        <h2>Links</h2>
         <span class="status-pill <%= event.status %>"><%= helpers.formatRelativeState(event.status) %></span>
       </div>
       <div class="stack compact">
-        <label class="field-label">Privé beheerderslink</label>
+        <label class="field-label">Beheerderslink</label>
         <div class="copy-row">
           <input class="text-input" id="adminLink" readonly value="<%= `${baseUrl}/admin/events/${event.id}?token=${token}` %>" />
           <button class="secondary-button" type="button" data-copy="adminLink">Kopieer</button>
@@ -48,7 +48,7 @@
 
     <article class="card-panel">
       <div class="row-space">
-        <h2>Ranglijst datumopties</h2>
+        <h2>Beste opties</h2>
         <% if (bestSlot) { %><span class="eyebrow">Aanbevolen: <%= helpers.formatDateLabel(bestSlot.slot_datetime, 'nl-NL', event.timezone) %></span><% } %>
       </div>
       <div class="stack">
@@ -83,7 +83,7 @@
 
     <article class="card-panel">
       <div class="row-space">
-        <h2>Activiteit</h2>
+        <h2>Recente activiteit</h2>
         <form action="/admin/events/<%= event.id %>/remind" method="POST" class="inline-form">
           <input type="hidden" name="token" value="<%= token %>" />
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
@@ -106,7 +106,7 @@
     <article class="card-panel">
       <div class="row-space">
         <h2>Deelnemers</h2>
-        <span class="muted"><%= invitees.length %> totaal</span>
+        <span class="muted"><%= invitees.length %></span>
       </div>
       <div class="stack compact">
         <% for (const invitee of invitees) { %>
@@ -135,7 +135,7 @@
     </article>
 
     <article class="card-panel">
-      <h2>Voeg deelnemer toe</h2>
+      <h2>Nieuwe deelnemer</h2>
       <form action="/admin/events/<%= event.id %>/invitees" method="POST" class="stack compact">
         <input type="hidden" name="token" value="<%= token %>" />
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />

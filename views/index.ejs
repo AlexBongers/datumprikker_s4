@@ -1,60 +1,45 @@
 <%- include('partials/header', { pageTitle: 'Home' }) %>
 <section class="hero-grid">
-  <div class="hero-copy card-panel accent-panel">
-    <span class="eyebrow">Nieuwe generatie datumprikker</span>
-    <h1>Plan sneller, kies slimmer en laat de beste datum vanzelf bovendrijven.</h1>
-    <p>
-      Deze vernieuwde datumprikker helpt organisatoren om opties te verzamelen, deelnemers uit te nodigen,
-      reacties te rangschikken en één duidelijk beslismoment vast te zetten.
-    </p>
+  <div class="hero-copy card-panel">
+    <span class="eyebrow">Datumprikker</span>
+    <h1>Eén rustige plek om samen een datum te kiezen.</h1>
+    <p>Maak een event, deel links en kies daarna de beste optie.</p>
     <div class="hero-actions">
-      <a href="/admin/login" class="primary-button">Start als organisator</a>
-      <a href="#how-it-works" class="secondary-button">Bekijk hoe het werkt</a>
+      <a href="/admin/login" class="primary-button">Open dashboard</a>
+      <button type="button" class="secondary-button" data-help-toggle>Hoe werkt het?</button>
     </div>
-    <div class="stat-row">
-      <article>
-        <strong>3 stappen</strong>
-        <span>Opzetten, uitnodigen, kiezen</span>
-      </article>
-      <article>
-        <strong>4 statussen</strong>
-        <span>Voorkeur, beschikbaar, indien nodig, niet mogelijk</span>
-      </article>
-      <article>
-        <strong>1 dashboard</strong>
-        <span>Alle inzichten en links op één plek</span>
-      </article>
+    <div class="mini-stats">
+      <span>Maak</span>
+      <span>Deel</span>
+      <span>Kies</span>
     </div>
   </div>
   <div class="hero-card card-panel">
-    <h2>Heb je al een uitnodiging?</h2>
-    <p>Open je persoonlijke link om direct je beschikbaarheid bij te werken.</p>
+    <h2>Heb je al een link?</h2>
     <form class="stack" onsubmit="event.preventDefault(); window.location.href = this.inviteLink.value.trim();">
-      <label class="field-label" for="inviteLink">Persoonlijke uitnodigingslink</label>
+      <label class="field-label" for="inviteLink">Plak je uitnodiging</label>
       <input id="inviteLink" name="inviteLink" class="text-input" placeholder="https://.../events/respond/..." />
-      <button class="primary-button" type="submit">Open mijn uitnodiging</button>
+      <button class="primary-button" type="submit">Open</button>
     </form>
-    <div class="tip-box">
-      <strong>Handig:</strong> organisatoren zien automatisch welke datumopties de beste matchscore hebben en wie nog moet reageren.
+    <div class="tip-box compact-tip">
+      <strong>Lokaal</strong>
+      <p>Geen hosting nodig. Gewoon op je laptop starten.</p>
     </div>
   </div>
 </section>
 
-<section id="how-it-works" class="content-grid">
+<section class="content-grid tidy-grid">
   <article class="card-panel">
-    <span class="step-badge">1</span>
-    <h3>Maak een event aan</h3>
-    <p>Voeg titel, context, locatie, deadline en meerdere datumopties toe. Eventueel voeg je al direct deelnemers toe.</p>
+    <h3>Voor organisatoren</h3>
+    <p>Nieuw event, datumopties, deelnemers.</p>
   </article>
   <article class="card-panel">
-    <span class="step-badge">2</span>
-    <h3>Stuur persoonlijke links</h3>
-    <p>Iedere deelnemer krijgt een eigen responslink. Daardoor kan iedereen later veilig terugkomen om zijn of haar reactie te wijzigen.</p>
+    <h3>Voor deelnemers</h3>
+    <p>Eén link, snel reageren, later aanpassen.</p>
   </article>
   <article class="card-panel">
-    <span class="step-badge">3</span>
-    <h3>Kies met vertrouwen</h3>
-    <p>Het dashboard rangschikt de opties op basis van voorkeuren, beschikbaarheid en verplichte deelnemers. Daarna zet je één klik een definitieve datum vast.</p>
+    <h3>Voor de keuze</h3>
+    <p>De beste datum staat vanzelf bovenaan.</p>
   </article>
 </section>
 <%- include('partials/footer') %>

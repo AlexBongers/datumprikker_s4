@@ -3,7 +3,7 @@
   <div>
     <span class="eyebrow">Persoonlijke uitnodiging</span>
     <h1><%= event.title %></h1>
-    <p class="muted"><%= event.description || 'Laat hier je beschikbaarheid achter.' %></p>
+    <% if (event.description) { %><p class="muted"><%= event.description %></p><% } %>
     <div class="meta-list">
       <span><%= invitee.role %></span>
       <span><%= helpers.formatDeadlineLabel(event.response_deadline, event.timezone) %></span>
@@ -17,7 +17,6 @@
 <section class="content-grid two-columns">
   <article class="card-panel">
     <h2>Jouw reactie</h2>
-    <p class="muted compact">Hallo <strong><%= invitee.name %></strong>, geef per optie aan of dit jouw voorkeur heeft, mogelijk is of alleen kan als het echt moet.</p>
     <form action="/events/respond/<%= invitee.invite_token %>" method="POST" class="stack-lg">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <div class="stack">
@@ -53,7 +52,7 @@
   </article>
 
   <article class="card-panel">
-    <h2>Wat ziet de organisator?</h2>
+    <h2>Stand</h2>
     <div class="stack compact">
       <% for (const slot of rankedSlots) { %>
         <div class="rank-card compact <%= slot.isFinalized ? 'finalized' : '' %>">

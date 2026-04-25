@@ -1,16 +1,18 @@
-# Datumprikker Matchmaker
+# Datumprikker
 
-Een volledig herwerkte datumprikker voor groepen, interviews en samenwerkingen. Organisatoren maken events met meerdere datumopties, nodigen deelnemers uit via persoonlijke links en zien automatisch welke optie de beste matchscore heeft.
+Een rustige, lokale webapp om samen een datum te kiezen. Organisatoren maken een event met opties, delen persoonlijke links en kiezen daarna de beste datum.
 
-## Hoogtepunten
+## Lokaal gebruiken
 
-- duidelijk organizer-dashboard met status, reacties en beste datumoptie
-- persoonlijke uitnodigingslinks per deelnemer
-- vier beschikbaarheidsniveaus: voorkeur, beschikbaar, indien nodig, niet mogelijk
-- ranking-engine met transparante score en verplichte deelnemers
-- definitieve datum vastzetten + `.ics` export
-- Render.com Blueprint met persistente SQLite-disk
-- activiteitsoverzicht en eenvoudige reminder-markering
+```bash
+npm ci
+cp .env.example .env
+npm run local
+```
+
+Open daarna <http://localhost:3000>.
+
+De data wordt lokaal opgeslagen in `./data/datumprikker.db`.
 
 ## Stack
 
@@ -20,29 +22,19 @@ Een volledig herwerkte datumprikker voor groepen, interviews en samenwerkingen. 
 - eigen CSS design system
 - Node test runner (`node --test`)
 
-## Lokaal starten
-
-```bash
-npm ci
-cp .env.example .env
-npm start
-```
-
-Open daarna <http://localhost:3000>.
-
 ## Tests
 
 ```bash
 npm test
 ```
 
-## Render deploy
+## Wat de app doet
 
-1. Push de branch naar GitHub.
-2. Maak in Render een nieuw Blueprint deploy aan voor deze repository.
-3. Vul `BASE_URL` in met je Render URL.
-4. Laat Render `SESSION_SECRET` en `ADMIN_PASSWORD` genereren.
-5. Deploy — de database wordt persistent opgeslagen op `/data/datumprikker.db`.
+- organizer-dashboard met beste datumopties
+- persoonlijke uitnodigingslinks per deelnemer
+- vier beschikbaarheidsniveaus
+- definitieve datum vastzetten + `.ics` export
+- eenvoudige activiteitshistorie
 
 ## Belangrijke routes
 
@@ -50,7 +42,7 @@ npm test
 - `/admin/login` organizer login
 - `/admin/dashboard` eventoverzicht
 - `/admin` nieuw event
-- `/health` health endpoint voor Render
+- `/health` health endpoint
 - `/events/respond/:token` persoonlijke uitnodiging voor deelnemers
 
 ## Omgevingsvariabelen
