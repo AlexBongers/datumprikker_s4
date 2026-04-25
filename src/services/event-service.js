@@ -3,6 +3,10 @@ const db = require('../db/database');
 const { buildRankedSlots } = require('./ranking-service');
 const { logActivity } = require('./activity-service');
 
+function normalizeLocationMode(value) {
+  return value === 'online' ? 'online' : 'onsite';
+}
+
 function normalizeSlotInputs(starts, ends) {
   const startList = Array.isArray(starts) ? starts : starts ? [starts] : [];
   const endList = Array.isArray(ends) ? ends : ends ? [ends] : [];
@@ -72,7 +76,7 @@ function createEvent(payload) {
       (payload.description || '').trim(),
       adminToken,
       payload.timezone || 'Europe/Amsterdam',
-      payload.location_mode || 'hybrid',
+      normalizeLocationMode(payload.location_mode),
       (payload.location_details || '').trim() || null,
       payload.response_deadline || null
     );
@@ -177,7 +181,7 @@ function updateEvent(eventId, payload) {
       payload.title.trim(),
       (payload.description || '').trim(),
       payload.timezone || 'Europe/Amsterdam',
-      payload.location_mode || 'hybrid',
+      normalizeLocationMode(payload.location_mode),
       (payload.location_details || '').trim() || null,
       payload.response_deadline || null,
       eventId
@@ -268,7 +272,7 @@ function duplicateEvent(eventId) {
     title: `${details.event.title} (kopie)`,
     description: details.event.description,
     timezone: details.event.timezone,
-    location_mode: details.event.location_mode,
+    location_mode: normalizeLocationMode(details.event.location_mode),
     location_details: details.event.location_details,
     response_deadline: details.event.response_deadline,
     slots: details.slots.map((slot) => slot.slot_datetime),
@@ -349,6 +353,7 @@ module.exports = {
   getInviteeByToken,
   markReminder,
   normalizeInviteeInputs,
+  normalizeLocationMode,
   normalizeSlotInputs,
   removeInvitee,
   saveInviteeAvailability,

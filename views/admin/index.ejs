@@ -1,7 +1,6 @@
 <%- include('../partials/header', { pageTitle: 'Nieuw event' }) %>
 <section class="page-header-row">
   <div>
-    <span class="eyebrow">Nieuw event</span>
     <h1>Nieuw event</h1>
   </div>
 </section>
@@ -18,10 +17,6 @@
         <span class="field-label">Titel</span>
         <input class="text-input" name="title" required value="<%= formValues.title || '' %>" />
       </label>
-      <label>
-        <span class="field-label">Tijdzone</span>
-        <input class="text-input" name="timezone" value="<%= formValues.timezone || 'Europe/Amsterdam' %>" />
-      </label>
       <label class="full-width">
         <span class="field-label">Beschrijving</span>
         <textarea class="text-area" name="description"><%= formValues.description || '' %></textarea>
@@ -29,9 +24,8 @@
       <label>
         <span class="field-label">Locatiemodus</span>
         <select class="text-input" name="location_mode">
-          <option value="hybrid" <%= (formValues.location_mode || 'hybrid') === 'hybrid' ? 'selected' : '' %>>Hybride</option>
           <option value="online" <%= formValues.location_mode === 'online' ? 'selected' : '' %>>Online</option>
-          <option value="onsite" <%= formValues.location_mode === 'onsite' ? 'selected' : '' %>>Op locatie</option>
+          <option value="onsite" <%= (formValues.location_mode || 'onsite') === 'onsite' ? 'selected' : '' %>>Op locatie</option>
         </select>
       </label>
       <label>
@@ -82,8 +76,4 @@
 
   <button class="primary-button" type="submit">Event aanmaken</button>
 </form>
-
-<script>
-  window.datumprikkerCreateForm && window.datumprikkerCreateForm();
-</script>
 <%- include('../partials/footer') %>

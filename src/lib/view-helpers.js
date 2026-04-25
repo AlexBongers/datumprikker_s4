@@ -40,6 +40,10 @@ function formatRelativeState(status) {
   return labels[status] || status;
 }
 
+function formatLocationMode(mode) {
+  return mode === 'online' ? 'Online' : 'Op locatie';
+}
+
 function formatDeadlineLabel(deadline, timeZone = 'Europe/Amsterdam') {
   if (!deadline) return 'Geen deadline ingesteld';
   return formatDateTimeRange(deadline, null, timeZone);
@@ -48,6 +52,7 @@ function formatDeadlineLabel(deadline, timeZone = 'Europe/Amsterdam') {
 module.exports = {
   formatDateLabel,
   formatDateTimeRange,
+  formatLocationMode,
   formatRelativeState,
   formatDeadlineLabel,
 };

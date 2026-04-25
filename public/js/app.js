@@ -3,13 +3,50 @@ function removeRowButton(row) {
   button.type = 'button';
   button.className = 'ghost-button danger';
   button.textContent = 'Verwijder';
-  button.addEventListener('click', () => row.remove());
+  button.addEventListener('click', () => {
+    row.remove();
+    syncInviteeRequiredValues();
+  });
   return button;
 }
 
-function addSlotRow(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
+function formatDateTimeLocal(date) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join('-') + `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function plusOneHour(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  date.setHours(date.getHours() + 1);
+  return formatDateTimeLocal(date);
+}
+
+function syncSlotEnd(startInput, endInput) {
+  if (!startInput || !endInput || !startInput.value) return;
+  if (endInput.value && endInput.dataset.autoFilled !== 'true') return;
+  const nextValue = plusOneHour(startInput.value);
+  if (!nextValue) return;
+  endInput.value = nextValue;
+  endInput.dataset.autoFilled = 'true';
+}
+
+function bindSlotRow(row) {
+  const [startInput, endInput] = row.querySelectorAll('input[type="datetime-local"]');
+  if (!startInput || !endInput) return row;
+  startInput.addEventListener('input', () => syncSlotEnd(startInput, endInput));
+  endInput.addEventListener('input', () => {
+    endInput.dataset.autoFilled = 'false';
+  });
+  syncSlotEnd(startInput, endInput);
+  return row;
+}
+
+function createSlotRow() {
   const row = document.createElement('div');
   row.className = 'dynamic-row two-up';
   row.innerHTML = `
@@ -17,6 +54,13 @@ function addSlotRow(containerId) {
     <input type="datetime-local" class="text-input" name="slots_end[]" />
   `;
   row.appendChild(removeRowButton(row));
+  return bindSlotRow(row);
+}
+
+function addSlotRow(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const row = createSlotRow();
   container.appendChild(row);
 }
 
@@ -49,6 +93,7 @@ function syncInviteeRequiredValues() {
 window.datumprikkerCreateForm = function () {
   document.querySelector('[data-add-row="slotRows"]')?.addEventListener('click', () => addSlotRow('slotRows'));
   document.querySelector('[data-add-row="inviteeRows"]')?.addEventListener('click', addInviteeRow);
+  document.querySelectorAll('#slotRows .dynamic-row').forEach(bindSlotRow);
   document.getElementById('eventForm')?.addEventListener('submit', () => {
     syncInviteeRequiredValues();
   });
@@ -57,6 +102,7 @@ window.datumprikkerCreateForm = function () {
 
 window.datumprikkerEditForm = function () {
   document.querySelector('[data-add-row="slotRows"]')?.addEventListener('click', () => addSlotRow('slotRows'));
+  document.querySelectorAll('#slotRows .dynamic-row').forEach(bindSlotRow);
 };
 
 document.querySelectorAll('[data-remove-row]').forEach((button) => {
@@ -108,3 +154,9 @@ document.querySelectorAll('form[data-confirm]').forEach((form) => {
     }
   });
 });
+
+if (document.getElementById('inviteeRows')) {
+  window.datumprikkerCreateForm();
+} else if (document.getElementById('slotRows')) {
+  window.datumprikkerEditForm();
+}

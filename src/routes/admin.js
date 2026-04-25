@@ -81,8 +81,7 @@ router.get('/', readLimiter, requireAdmin, (req, res) => {
   res.render('admin/index', {
     error: null,
     values: {
-      timezone: 'Europe/Amsterdam',
-      location_mode: 'hybrid',
+      location_mode: 'onsite',
     },
   });
 });

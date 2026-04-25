@@ -6,7 +6,7 @@
     <% if (event.description) { %><p class="muted"><%= event.description %></p><% } %>
     <div class="meta-list">
       <span><%= helpers.formatRelativeState(event.status) %></span>
-      <span><%= event.location_mode %></span>
+      <span><%= helpers.formatLocationMode(event.location_mode) %></span>
       <span><%= helpers.formatDeadlineLabel(event.response_deadline, event.timezone) %></span>
     </div>
   </div>

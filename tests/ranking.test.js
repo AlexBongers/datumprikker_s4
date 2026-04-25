@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { buildRankedSlots } = require('../src/services/ranking-service');
-const { normalizeSlotInputs, validateEventInput } = require('../src/services/event-service');
+const { normalizeLocationMode, normalizeSlotInputs, validateEventInput } = require('../src/services/event-service');
 
 test('ranking prefers strong matches with preferred responses', () => {
   const slots = [
@@ -33,4 +33,10 @@ test('normalizeSlotInputs removes empty and duplicate slots', () => {
 test('validateEventInput requires title and at least one slot', () => {
   const { errors } = validateEventInput({ title: '', slots: '' });
   assert.equal(errors.length, 2);
+});
+
+test('normalizeLocationMode only keeps online or onsite', () => {
+  assert.equal(normalizeLocationMode('online'), 'online');
+  assert.equal(normalizeLocationMode('hybrid'), 'onsite');
+  assert.equal(normalizeLocationMode('anything-else'), 'onsite');
 });
