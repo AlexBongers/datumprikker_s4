@@ -36,17 +36,23 @@ function addInviteeRow() {
   `;
   row.appendChild(removeRowButton(row));
   container.appendChild(row);
+  syncInviteeRequiredValues();
+}
+
+function syncInviteeRequiredValues() {
+  document.querySelectorAll('#inviteeRows .invitee-row').forEach((row, index) => {
+    const checkbox = row.querySelector('input[name="invitee_required"]');
+    if (checkbox) checkbox.value = String(index);
+  });
 }
 
 window.datumprikkerCreateForm = function () {
   document.querySelector('[data-add-row="slotRows"]')?.addEventListener('click', () => addSlotRow('slotRows'));
   document.querySelector('[data-add-row="inviteeRows"]')?.addEventListener('click', addInviteeRow);
   document.getElementById('eventForm')?.addEventListener('submit', () => {
-    document.querySelectorAll('#inviteeRows .invitee-row').forEach((row, index) => {
-      const checkbox = row.querySelector('input[name="invitee_required"]');
-      if (checkbox) checkbox.value = String(index);
-    });
+    syncInviteeRequiredValues();
   });
+  syncInviteeRequiredValues();
 };
 
 window.datumprikkerEditForm = function () {
@@ -54,7 +60,10 @@ window.datumprikkerEditForm = function () {
 };
 
 document.querySelectorAll('[data-remove-row]').forEach((button) => {
-  button.addEventListener('click', () => button.closest('.dynamic-row')?.remove());
+  button.addEventListener('click', () => {
+    button.closest('.dynamic-row')?.remove();
+    syncInviteeRequiredValues();
+  });
 });
 
 const helpDialog = document.getElementById('helpDialog');
