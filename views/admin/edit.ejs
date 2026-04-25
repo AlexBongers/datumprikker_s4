@@ -7,7 +7,7 @@
 </section>
 
 <% if (error) { %><div class="alert-banner danger"><%= error %></div><% } %>
-<form action="/admin/events/<%= event.id %>/edit" method="POST" class="stack-lg" id="eventForm">
+<form action="/admin/events/<%= event.id %>/edit" method="POST" class="stack-lg" id="eventForm" data-form-kind="edit">
   <input type="hidden" name="token" value="<%= token %>" />
   <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 

@@ -17,7 +17,7 @@ db.exec(`
     description TEXT,
     admin_token TEXT NOT NULL,
     timezone TEXT DEFAULT 'Europe/Amsterdam',
-    location_mode TEXT DEFAULT 'hybrid' CHECK(location_mode IN ('online', 'onsite', 'hybrid')),
+    location_mode TEXT DEFAULT 'onsite' CHECK(location_mode IN ('online', 'onsite')),
     location_details TEXT,
     response_deadline TEXT,
     status TEXT DEFAULT 'open' CHECK(status IN ('open', 'finalized', 'archived')),
@@ -91,7 +91,7 @@ db.exec(`
 
 const eventMigrations = [
   "ALTER TABLE events ADD COLUMN timezone TEXT DEFAULT 'Europe/Amsterdam'",
-  "ALTER TABLE events ADD COLUMN location_mode TEXT DEFAULT 'hybrid'",
+  "ALTER TABLE events ADD COLUMN location_mode TEXT DEFAULT 'onsite'",
   'ALTER TABLE events ADD COLUMN location_details TEXT',
   'ALTER TABLE events ADD COLUMN response_deadline TEXT',
   "ALTER TABLE events ADD COLUMN status TEXT DEFAULT 'open'",
@@ -101,6 +101,68 @@ const eventMigrations = [
 for (const sql of eventMigrations) {
   try { db.exec(sql); } catch (_) {}
 }
+
+const eventTableSql = db.prepare(`
+  SELECT sql
+  FROM sqlite_master
+  WHERE type = 'table' AND name = 'events'
+`).get()?.sql || '';
+
+if (eventTableSql.includes("'hybrid'")) {
+  const rebuildEventsTable = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE events_next (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        admin_token TEXT NOT NULL,
+        timezone TEXT DEFAULT 'Europe/Amsterdam',
+        location_mode TEXT DEFAULT 'onsite' CHECK(location_mode IN ('online', 'onsite')),
+        location_details TEXT,
+        response_deadline TEXT,
+        status TEXT DEFAULT 'open' CHECK(status IN ('open', 'finalized', 'archived')),
+        finalized_slot_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      INSERT INTO events_next (
+        id, title, description, admin_token, timezone, location_mode, location_details,
+        response_deadline, status, finalized_slot_id, created_at, updated_at
+      )
+      SELECT
+        id,
+        title,
+        description,
+        admin_token,
+        COALESCE(timezone, 'Europe/Amsterdam'),
+        CASE WHEN location_mode = 'online' THEN 'online' ELSE 'onsite' END,
+        location_details,
+        response_deadline,
+        CASE WHEN status IN ('open', 'finalized', 'archived') THEN status ELSE 'open' END,
+        finalized_slot_id,
+        created_at,
+        updated_at
+      FROM events;
+
+      DROP TABLE events;
+      ALTER TABLE events_next RENAME TO events;
+    `);
+  });
+
+  db.pragma('foreign_keys = OFF');
+  try {
+    rebuildEventsTable();
+  } finally {
+    db.pragma('foreign_keys = ON');
+  }
+}
+
+db.prepare(`
+  UPDATE events
+  SET location_mode = 'onsite'
+  WHERE location_mode IS NULL OR location_mode NOT IN ('online', 'onsite')
+`).run();
 
 const responseMigrations = [
   'ALTER TABLE time_slots ADD COLUMN slot_end_datetime TEXT',

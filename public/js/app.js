@@ -155,8 +155,10 @@ document.querySelectorAll('form[data-confirm]').forEach((form) => {
   });
 });
 
-if (document.getElementById('inviteeRows')) {
+const eventForm = document.getElementById('eventForm');
+
+if (eventForm?.dataset.formKind === 'create') {
   window.datumprikkerCreateForm();
-} else if (document.getElementById('slotRows')) {
+} else if (eventForm?.dataset.formKind === 'edit') {
   window.datumprikkerEditForm();
 }

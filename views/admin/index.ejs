@@ -7,7 +7,7 @@
 
 <% const formValues = values || {}; %>
 <% if (error) { %><div class="alert-banner danger"><%= error %></div><% } %>
-<form action="/admin/events" method="POST" class="stack-lg" id="eventForm">
+<form action="/admin/events" method="POST" class="stack-lg" id="eventForm" data-form-kind="create">
   <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
   <section class="card-panel form-section">

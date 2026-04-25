@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 
 const adminRouter = require('./routes/admin');
 const eventsRouter = require('./routes/events');
-const { formatDateTimeRange, formatDateLabel, formatRelativeState, formatDeadlineLabel } = require('./lib/view-helpers');
+const { formatDateTimeRange, formatDateLabel, formatLocationMode, formatRelativeState, formatDeadlineLabel } = require('./lib/view-helpers');
 
 const app = express();
 
@@ -51,6 +51,7 @@ app.use((req, res, next) => {
   res.locals.helpers = {
     formatDateTimeRange,
     formatDateLabel,
+    formatLocationMode,
     formatRelativeState,
     formatDeadlineLabel,
   };
