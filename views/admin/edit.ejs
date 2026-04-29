@@ -1,0 +1,61 @@
+<%- include('../partials/header', { pageTitle: 'Event bewerken' }) %>
+<section class="page-header-row">
+  <div>
+    <h1><%= event.title %></h1>
+  </div>
+  <a class="secondary-button" href="/admin/events/<%= event.id %>?token=<%= token %>">Terug naar event</a>
+</section>
+
+<% if (error) { %><div class="alert-banner danger"><%= error %></div><% } %>
+<form action="/admin/events/<%= event.id %>/edit" method="POST" class="stack-lg" id="eventForm" data-form-kind="edit">
+  <input type="hidden" name="token" value="<%= token %>" />
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+  <section class="card-panel form-section">
+    <h2>Eventdetails</h2>
+    <div class="form-grid">
+      <label>
+        <span class="field-label">Titel</span>
+        <input class="text-input" name="title" required value="<%= event.title %>" />
+      </label>
+      <label class="full-width">
+        <span class="field-label">Beschrijving</span>
+        <textarea class="text-area" name="description"><%= event.description || '' %></textarea>
+      </label>
+      <label>
+        <span class="field-label">Locatiemodus</span>
+        <select class="text-input" name="location_mode">
+          <option value="online" <%= event.location_mode === 'online' ? 'selected' : '' %>>Online</option>
+          <option value="onsite" <%= event.location_mode !== 'online' ? 'selected' : '' %>>Op locatie</option>
+        </select>
+      </label>
+      <label>
+        <span class="field-label">Reactiedeadline</span>
+        <input class="text-input" type="datetime-local" name="response_deadline" value="<%= event.response_deadline ? event.response_deadline.slice(0, 16) : '' %>" />
+      </label>
+      <label class="full-width">
+        <span class="field-label">Locatie / extra instructie</span>
+        <input class="text-input" name="location_details" value="<%= event.location_details || '' %>" />
+      </label>
+    </div>
+  </section>
+
+  <section class="card-panel form-section">
+    <div class="row-space">
+      <h2>Datumopties</h2>
+      <button type="button" class="secondary-button" data-add-row="slotRows">Optie toevoegen</button>
+    </div>
+    <div class="stack" id="slotRows">
+      <% for (const slot of slots) { %>
+        <div class="dynamic-row two-up">
+          <input type="datetime-local" class="text-input" name="slots[]" value="<%= slot.slot_datetime.slice(0, 16) %>" required />
+          <input type="datetime-local" class="text-input" name="slots_end[]" value="<%= slot.slot_end_datetime ? slot.slot_end_datetime.slice(0, 16) : '' %>" />
+          <button type="button" class="ghost-button danger" data-remove-row>Verwijder</button>
+        </div>
+      <% } %>
+    </div>
+  </section>
+
+  <button class="primary-button" type="submit">Wijzigingen opslaan</button>
+</form>
+<%- include('../partials/footer') %>

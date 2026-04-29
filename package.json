@@ -1,0 +1,29 @@
+{
+  "name": "datumprikker-s4",
+  "version": "2.0.0",
+  "description": "Datumprikker Matchmaker for structured event scheduling",
+  "main": "src/app.js",
+  "scripts": {
+    "local": "node src/app.js",
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexBongers/datumprikker_s4.git"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "express-session": "^1.19.0",
+    "uuid": "^13.0.0"
+  }
+}

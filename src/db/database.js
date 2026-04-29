@@ -1,0 +1,255 @@
+const Database = require('better-sqlite3');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../data/datumprikker.db');
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+
+const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS events (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    admin_token TEXT NOT NULL,
+    timezone TEXT DEFAULT 'Europe/Amsterdam',
+    location_mode TEXT DEFAULT 'onsite' CHECK(location_mode IN ('online', 'onsite')),
+    location_details TEXT,
+    response_deadline TEXT,
+    status TEXT DEFAULT 'open' CHECK(status IN ('open', 'finalized', 'archived')),
+    finalized_slot_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS time_slots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL,
+    slot_datetime TEXT NOT NULL,
+    slot_end_datetime TEXT,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS responses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL,
+    responder_name TEXT NOT NULL,
+    responder_type TEXT NOT NULL CHECK(responder_type IN ('student', 'ondernemer')),
+    time_slot_id INTEGER NOT NULL,
+    contact_name TEXT,
+    contact_email TEXT,
+    contact_phone TEXT,
+    location_preference TEXT,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (time_slot_id) REFERENCES time_slots(id) ON DELETE CASCADE,
+    UNIQUE(event_id, responder_name, responder_type, time_slot_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS invitees (
+    id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    organization TEXT,
+    role TEXT NOT NULL CHECK(role IN ('student', 'ondernemer')),
+    is_required INTEGER DEFAULT 0,
+    invite_token TEXT NOT NULL UNIQUE,
+    response_note TEXT,
+    responded_at TEXT,
+    reminder_sent_at TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS availabilities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invitee_id TEXT NOT NULL,
+    slot_id INTEGER NOT NULL,
+    availability TEXT NOT NULL CHECK(availability IN ('preferred', 'available', 'if_needed', 'unavailable')),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(invitee_id, slot_id),
+    FOREIGN KEY (invitee_id) REFERENCES invitees(id) ON DELETE CASCADE,
+    FOREIGN KEY (slot_id) REFERENCES time_slots(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL,
+    actor_label TEXT NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS self_registrations (
+    id TEXT PRIMARY KEY,
+    role TEXT NOT NULL CHECK(role IN ('student', 'ondernemer')),
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    organization TEXT,
+    notes TEXT,
+    preferred_slots TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'matched', 'archived')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+const eventMigrations = [
+  "ALTER TABLE events ADD COLUMN timezone TEXT DEFAULT 'Europe/Amsterdam'",
+  "ALTER TABLE events ADD COLUMN location_mode TEXT DEFAULT 'onsite'",
+  'ALTER TABLE events ADD COLUMN location_details TEXT',
+  'ALTER TABLE events ADD COLUMN response_deadline TEXT',
+  "ALTER TABLE events ADD COLUMN status TEXT DEFAULT 'open'",
+  'ALTER TABLE events ADD COLUMN finalized_slot_id INTEGER',
+  'ALTER TABLE events ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP',
+];
+for (const sql of eventMigrations) {
+  try { db.exec(sql); } catch (_) {}
+}
+
+const eventTableSql = db.prepare(`
+  SELECT sql
+  FROM sqlite_master
+  WHERE type = 'table' AND name = 'events'
+`).get()?.sql || '';
+
+if (eventTableSql.includes("'hybrid'")) {
+  const rebuildEventsTable = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE events_next (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        admin_token TEXT NOT NULL,
+        timezone TEXT DEFAULT 'Europe/Amsterdam',
+        location_mode TEXT DEFAULT 'onsite' CHECK(location_mode IN ('online', 'onsite')),
+        location_details TEXT,
+        response_deadline TEXT,
+        status TEXT DEFAULT 'open' CHECK(status IN ('open', 'finalized', 'archived')),
+        finalized_slot_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      INSERT INTO events_next (
+        id, title, description, admin_token, timezone, location_mode, location_details,
+        response_deadline, status, finalized_slot_id, created_at, updated_at
+      )
+      SELECT
+        id,
+        title,
+        description,
+        admin_token,
+        COALESCE(timezone, 'Europe/Amsterdam'),
+        CASE WHEN location_mode = 'online' THEN 'online' ELSE 'onsite' END,
+        location_details,
+        response_deadline,
+        CASE WHEN status IN ('open', 'finalized', 'archived') THEN status ELSE 'open' END,
+        finalized_slot_id,
+        created_at,
+        updated_at
+      FROM events;
+
+      DROP TABLE events;
+      ALTER TABLE events_next RENAME TO events;
+    `);
+  });
+
+  db.pragma('foreign_keys = OFF');
+  try {
+    rebuildEventsTable();
+  } finally {
+    db.pragma('foreign_keys = ON');
+  }
+}
+
+db.prepare(`
+  UPDATE events
+  SET location_mode = 'onsite'
+  WHERE location_mode IS NULL OR location_mode NOT IN ('online', 'onsite')
+`).run();
+
+const responseMigrations = [
+  'ALTER TABLE time_slots ADD COLUMN slot_end_datetime TEXT',
+  'ALTER TABLE responses ADD COLUMN contact_name TEXT',
+  'ALTER TABLE responses ADD COLUMN contact_email TEXT',
+  'ALTER TABLE responses ADD COLUMN contact_phone TEXT',
+  'ALTER TABLE responses ADD COLUMN location_preference TEXT',
+];
+for (const sql of responseMigrations) {
+  try { db.exec(sql); } catch (_) {}
+}
+
+const legacyInvitees = db.prepare(`
+  SELECT DISTINCT r.event_id, r.responder_name, r.responder_type,
+         r.contact_email, r.contact_phone, r.contact_name, r.location_preference
+  FROM responses r
+  WHERE NOT EXISTS (
+    SELECT 1 FROM invitees i
+    WHERE i.event_id = r.event_id
+      AND i.name = r.responder_name
+      AND i.role = r.responder_type
+  )
+`).all();
+
+const insertInvitee = db.prepare(`
+  INSERT INTO invitees (
+    id, event_id, name, email, phone, organization, role, is_required, invite_token, responded_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP)
+`);
+const insertAvailability = db.prepare(`
+  INSERT OR IGNORE INTO availabilities (invitee_id, slot_id, availability)
+  VALUES (?, ?, 'available')
+`);
+
+for (const legacyInvitee of legacyInvitees) {
+  const inviteeId = crypto.randomUUID();
+  const inviteToken = crypto.randomUUID();
+  insertInvitee.run(
+    inviteeId,
+    legacyInvitee.event_id,
+    legacyInvitee.responder_name,
+    legacyInvitee.contact_email || null,
+    legacyInvitee.contact_phone || null,
+    legacyInvitee.responder_type === 'ondernemer' ? legacyInvitee.contact_name || legacyInvitee.responder_name : null,
+    legacyInvitee.responder_type,
+    inviteToken
+  );
+
+  const slots = db.prepare(`
+    SELECT time_slot_id FROM responses
+    WHERE event_id = ? AND responder_name = ? AND responder_type = ?
+  `).all(legacyInvitee.event_id, legacyInvitee.responder_name, legacyInvitee.responder_type);
+
+  for (const slot of slots) {
+    insertAvailability.run(inviteeId, slot.time_slot_id);
+  }
+}
+
+// Ensure self_registrations exists on older databases
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS self_registrations (
+      id TEXT PRIMARY KEY,
+      role TEXT NOT NULL CHECK(role IN ('student', 'ondernemer')),
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      organization TEXT,
+      notes TEXT,
+      preferred_slots TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'matched', 'archived')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+} catch (_) {}
+
+module.exports = db;

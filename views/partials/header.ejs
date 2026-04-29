@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof pageTitle !== 'undefined' ? `${pageTitle} · ` : '' %>Datumprikker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-shell">
+      <a class="brand" href="/">
+        <span class="brand-mark"><i class="bi bi-calendar2-week"></i></span>
+        <span class="brand-copy">
+          <strong>Datumprikker</strong>
+        </span>
+      </a>
+      <nav class="top-nav">
+        <a href="/" class="nav-link <%= currentPath === '/' ? 'active' : '' %>">Home</a>
+        <button type="button" class="nav-link help-button" data-help-toggle aria-haspopup="dialog" aria-controls="helpDialog">Help</button>
+        <% if (isAdmin) { %>
+          <a href="/admin/dashboard" class="nav-link <%= currentPath.startsWith('/admin/dashboard') ? 'active' : '' %>">Dashboard</a>
+          <a href="/admin/registraties" class="nav-link <%= currentPath.startsWith('/admin/registraties') ? 'active' : '' %>">Aanmeldingen</a>
+          <a href="/admin" class="nav-link <%= currentPath === '/admin' ? 'active' : '' %>">Nieuw event</a>
+          <form action="/admin/logout" method="POST" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button class="ghost-button" type="submit">Uitloggen</button>
+          </form>
+        <% } else { %>
+          <a href="/admin/login" class="pill-link">Beheerder</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+  <main class="container page-shell">

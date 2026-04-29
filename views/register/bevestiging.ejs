@@ -1,0 +1,14 @@
+<%- include('../partials/header', { pageTitle: 'Aanmelding ontvangen' }) %>
+<section class="page-shell narrow-shell">
+  <div class="card-panel confirmation-card">
+    <span class="confirmation-icon"><i class="bi bi-check-circle-fill"></i></span>
+    <h1>Bedankt voor je aanmelding!</h1>
+    <% if (rol === 'ondernemer') { %>
+      <p>We hebben je voorkeursmomenten ontvangen. Zodra er een passende student is gevonden, nemen we contact op.</p>
+    <% } else { %>
+      <p>We hebben je voorkeursmomenten ontvangen. Zodra er een passende organisatie is gevonden, nemen we contact op.</p>
+    <% } %>
+    <a href="/" class="primary-button">Terug naar de homepage</a>
+  </div>
+</section>
+<%- include('../partials/footer') %>

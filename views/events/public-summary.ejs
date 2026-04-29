@@ -1,0 +1,22 @@
+<%- include('../partials/header', { pageTitle: event.title }) %>
+<section class="narrow-shell">
+  <div class="card-panel">
+    <span class="eyebrow">Publiek overzicht</span>
+    <h1><%= event.title %></h1>
+    <p class="muted"><%= event.description || 'Voor deze datumprikker zijn persoonlijke uitnodigingslinks nodig om te reageren.' %></p>
+    <div class="meta-list">
+      <span><%= helpers.formatRelativeState(event.status) %></span>
+      <span><%= slots.length %> opties</span>
+      <span><%= stats.respondedInvitees %> reacties</span>
+    </div>
+    <% if (event.finalized_slot_id) { const chosen = rankedSlots.find((slot) => slot.id === event.finalized_slot_id); %>
+      <div class="tip-box success">
+        <strong>Definitief moment:</strong>
+        <%= chosen ? helpers.formatDateTimeRange(chosen.slot_datetime, chosen.slot_end_datetime, event.timezone) : 'is gekozen' %>
+      </div>
+    <% } else { %>
+      <div class="tip-box">Gebruik je persoonlijke uitnodigingslink om te reageren of je antwoord te wijzigen.</div>
+    <% } %>
+  </div>
+</section>
+<%- include('../partials/footer') %>

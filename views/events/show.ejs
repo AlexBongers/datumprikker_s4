@@ -1,0 +1,76 @@
+<%- include('../partials/header', { pageTitle: invitee.name }) %>
+<section class="page-header-row">
+  <div>
+    <span class="eyebrow">Persoonlijke uitnodiging</span>
+    <h1><%= event.title %></h1>
+    <% if (event.description) { %><p class="muted"><%= event.description %></p><% } %>
+    <div class="meta-list">
+      <span><%= invitee.role %></span>
+      <span><%= helpers.formatDeadlineLabel(event.response_deadline, event.timezone) %></span>
+      <% if (event.location_details) { %><span><%= event.location_details %></span><% } %>
+    </div>
+  </div>
+</section>
+
+<% if (success) { %><div class="alert-banner success">Je beschikbaarheid is opgeslagen. Je kunt deze link altijd opnieuw gebruiken om je antwoord bij te werken.</div><% } %>
+
+<section class="content-grid two-columns">
+  <article class="card-panel">
+    <h2>Jouw reactie</h2>
+    <form action="/events/respond/<%= invitee.invite_token %>" method="POST" class="stack-lg">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <div class="stack">
+        <% for (const slot of slots) { const current = selectionBySlotId[slot.id]; %>
+          <div class="availability-card">
+            <div>
+              <strong><%= helpers.formatDateTimeRange(slot.slot_datetime, slot.slot_end_datetime, event.timezone) %></strong>
+            </div>
+            <div class="availability-options">
+              <% const options = [
+                ['preferred', 'Voorkeur'],
+                ['available', 'Kan'],
+                ['if_needed', 'Indien nodig'],
+                ['unavailable', 'Niet mogelijk'],
+              ]; %>
+              <% for (const [value, label] of options) { %>
+                <label class="availability-pill">
+                  <input type="radio" name="availability_<%= slot.id %>" value="<%= value %>" <%= (!current && value === 'unavailable') || (current && current.availability === value) ? 'checked' : '' %> />
+                  <span><%= label %></span>
+                </label>
+              <% } %>
+            </div>
+          </div>
+          <input type="hidden" name="slot_ids" value="<%= slot.id %>" />
+        <% } %>
+      </div>
+      <label>
+        <span class="field-label">Opmerking voor de organisator</span>
+        <textarea class="text-area" name="response_note" placeholder="Bijv. alleen online, liever ochtend, of extra context"><%= invitee.response_note || '' %></textarea>
+      </label>
+      <button class="primary-button" type="submit">Sla mijn beschikbaarheid op</button>
+    </form>
+  </article>
+
+  <article class="card-panel">
+    <h2>Stand</h2>
+    <div class="stack compact">
+      <% for (const slot of rankedSlots) { %>
+        <div class="rank-card compact <%= slot.isFinalized ? 'finalized' : '' %>">
+          <div>
+            <strong><%= helpers.formatDateTimeRange(slot.slot_datetime, slot.slot_end_datetime, event.timezone) %></strong>
+            <p><%= slot.explanation %></p>
+          </div>
+          <span class="status-pill <%= slot.isFinalized ? 'finalized' : slot.isStrongMatch ? 'open' : 'archived' %>">Score <%= slot.score %></span>
+        </div>
+      <% } %>
+    </div>
+    <% if (event.finalized_slot_id) { %>
+      <div class="tip-box">
+        <strong>Definitieve keuze:</strong>
+        <% const chosen = rankedSlots.find((slot) => slot.id === event.finalized_slot_id); %>
+        <%= chosen ? helpers.formatDateTimeRange(chosen.slot_datetime, chosen.slot_end_datetime, event.timezone) : 'is al vastgezet' %>
+      </div>
+    <% } %>
+  </article>
+</section>
+<%- include('../partials/footer') %>
