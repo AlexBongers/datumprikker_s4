@@ -1,0 +1,99 @@
+<%- include('../partials/header', { pageTitle: 'Aanmeldingen' }) %>
+<section class="page-header-row">
+  <div>
+    <span class="eyebrow">Beheerder</span>
+    <h1>Aanmeldingen</h1>
+  </div>
+  <a href="/admin/dashboard" class="secondary-button">← Dashboard</a>
+</section>
+
+<% const pending = registrations.filter(r => r.status === 'pending'); %>
+<% const matched = registrations.filter(r => r.status === 'matched'); %>
+<% const archived = registrations.filter(r => r.status === 'archived'); %>
+
+<section class="summary-grid">
+  <article class="card-panel metric-card"><strong><%= pending.length %></strong><span>Openstaand</span></article>
+  <article class="card-panel metric-card"><strong><%= matched.length %></strong><span>Gematcht</span></article>
+  <article class="card-panel metric-card"><strong><%= archived.length %></strong><span>Gearchiveerd</span></article>
+  <article class="card-panel metric-card"><strong><%= registrations.length %></strong><span>Totaal</span></article>
+</section>
+
+<section class="card-panel table-panel">
+  <% if (registrations.length === 0) { %>
+    <div class="empty-state">
+      <h2>Nog geen aanmeldingen</h2>
+      <p>Organisaties en studenten kunnen via de homepage hun voorkeursmomenten doorgeven.</p>
+    </div>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Naam</th>
+          <th>Rol</th>
+          <th>Contact</th>
+          <th>Voorkeursmomenten</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const reg of registrations) { %>
+          <tr>
+            <td>
+              <strong><%= reg.name %></strong>
+              <% if (reg.organization) { %><div class="muted small"><%= reg.organization %></div><% } %>
+              <% if (reg.notes) { %><div class="muted small note-text"><%= reg.notes %></div><% } %>
+            </td>
+            <td>
+              <span class="status-pill <%= reg.role %>">
+                <% if (reg.role === 'ondernemer') { %><i class="bi bi-building"></i> Organisatie<% } else { %><i class="bi bi-mortarboard"></i> Student<% } %>
+              </span>
+            </td>
+            <td>
+              <% if (reg.email) { %><div><a href="mailto:<%= reg.email %>"><%= reg.email %></a></div><% } %>
+              <% if (reg.phone) { %><div class="muted small"><%= reg.phone %></div><% } %>
+            </td>
+            <td>
+              <% if (reg.preferred_slots && reg.preferred_slots.length > 0) { %>
+                <ul class="slot-list">
+                  <% for (const slot of reg.preferred_slots) { %>
+                    <li><%= new Date(slot.start).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' }) %><% if (slot.end) { %> – <%= new Date(slot.end).toLocaleString('nl-NL', { timeStyle: 'short' }) %><% } %></li>
+                  <% } %>
+                </ul>
+              <% } else { %>
+                <span class="muted">—</span>
+              <% } %>
+            </td>
+            <td>
+              <span class="status-pill <%= reg.status %>">
+                <% if (reg.status === 'pending') { %>Openstaand<% } else if (reg.status === 'matched') { %>Gematcht<% } else { %>Gearchiveerd<% } %>
+              </span>
+            </td>
+            <td class="align-right">
+              <div class="button-group">
+                <form action="/admin/registraties/<%= reg.id %>/status" method="POST" class="inline-form">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <% if (reg.status !== 'matched') { %>
+                    <button type="submit" name="status" value="matched" class="secondary-button btn-sm">Matchen</button>
+                  <% } %>
+                  <% if (reg.status !== 'archived') { %>
+                    <button type="submit" name="status" value="archived" class="ghost-button btn-sm">Archiveer</button>
+                  <% } %>
+                  <% if (reg.status === 'archived' || reg.status === 'matched') { %>
+                    <button type="submit" name="status" value="pending" class="ghost-button btn-sm">Heropen</button>
+                  <% } %>
+                </form>
+                <form action="/admin/registraties/<%= reg.id %>/delete" method="POST" class="inline-form"
+                      onsubmit="return confirm('Aanmelding verwijderen?')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button type="submit" class="ghost-button danger btn-sm">Verwijder</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

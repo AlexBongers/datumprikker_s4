@@ -17,6 +17,12 @@ const {
   validateEventInput,
 } = require('../services/event-service');
 
+const {
+  getAllRegistrations,
+  setRegistrationStatus,
+  deleteRegistration,
+} = require('../services/registration-service');
+
 const router = express.Router();
 
 const readLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false });
@@ -192,6 +198,26 @@ router.post('/events/:id/delete', writeLimiter, (req, res) => {
   if (loaded.error) return loaded.error;
   deleteEvent(loaded.event.id);
   return res.redirect('/admin/dashboard');
+});
+
+router.get('/registraties', readLimiter, requireAdmin, (req, res) => {
+  const registrations = getAllRegistrations().map((reg) => ({
+    ...reg,
+    preferred_slots: JSON.parse(reg.preferred_slots || '[]'),
+  }));
+  res.render('admin/registraties', { registrations });
+});
+
+router.post('/registraties/:id/status', writeLimiter, requireAdmin, (req, res) => {
+  const allowed = ['pending', 'matched', 'archived'];
+  const status = allowed.includes(req.body.status) ? req.body.status : 'pending';
+  setRegistrationStatus(req.params.id, status);
+  return res.redirect('/admin/registraties');
+});
+
+router.post('/registraties/:id/delete', writeLimiter, requireAdmin, (req, res) => {
+  deleteRegistration(req.params.id);
+  return res.redirect('/admin/registraties');
 });
 
 module.exports = router;

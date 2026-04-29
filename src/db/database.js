@@ -87,6 +87,19 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS self_registrations (
+    id TEXT PRIMARY KEY,
+    role TEXT NOT NULL CHECK(role IN ('student', 'ondernemer')),
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    organization TEXT,
+    notes TEXT,
+    preferred_slots TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'matched', 'archived')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 const eventMigrations = [
@@ -220,5 +233,23 @@ for (const legacyInvitee of legacyInvitees) {
     insertAvailability.run(inviteeId, slot.time_slot_id);
   }
 }
+
+// Ensure self_registrations exists on older databases
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS self_registrations (
+      id TEXT PRIMARY KEY,
+      role TEXT NOT NULL CHECK(role IN ('student', 'ondernemer')),
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      organization TEXT,
+      notes TEXT,
+      preferred_slots TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'matched', 'archived')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+} catch (_) {}
 
 module.exports = db;

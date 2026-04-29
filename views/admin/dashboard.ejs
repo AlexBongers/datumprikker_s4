@@ -1,10 +1,13 @@
 <%- include('../partials/header', { pageTitle: 'Dashboard' }) %>
 <section class="page-header-row">
   <div>
-    <span class="eyebrow">Organizer dashboard</span>
+    <span class="eyebrow">Beheerder dashboard</span>
     <h1>Overzicht</h1>
   </div>
-  <a href="/admin" class="primary-button">Nieuw event</a>
+  <div class="button-group">
+    <a href="/admin/registraties" class="secondary-button">Aanmeldingen</a>
+    <a href="/admin" class="primary-button">Nieuw event</a>
+  </div>
 </section>
 
 <section class="summary-grid">

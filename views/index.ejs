@@ -1,54 +1,145 @@
 <%- include('partials/header', { pageTitle: 'Home' }) %>
-<section class="hero-grid">
+
+<section class="hero-section">
   <div class="hero-copy card-panel">
     <span class="eyebrow">Datumprikker</span>
     <h1>Samen een datum kiezen.</h1>
-    <p>Maak een event, deel links en kies daarna de beste optie.</p>
-    <div class="hero-divider" aria-hidden="true"></div>
-    <div class="hero-actions">
-      <a href="/admin/login" class="primary-button">Open dashboard</a>
-      <button type="button" class="secondary-button" data-help-toggle>Hoe werkt het?</button>
-    </div>
-    <div class="mini-stats">
-      <a href="/admin" class="mini-stat-link">Event aanmaken</a>
-      <a href="/admin/dashboard" class="mini-stat-link">Link delen</a>
-      <a href="#invite-section" class="mini-stat-link">Datum kiezen</a>
-    </div>
+    <p>Geef je voorkeur op, dan zoeken wij de beste match tussen organisaties en studenten.</p>
   </div>
-  <div class="hero-card card-panel" id="invite-section">
-    <span class="section-label">Direct openen</span>
-    <h2>Heb je al een link?</h2>
-    <form class="stack" onsubmit="event.preventDefault(); window.location.href = this.inviteLink.value.trim();">
-      <label class="field-label" for="inviteLink">Plak je uitnodiging</label>
-      <input id="inviteLink" name="inviteLink" class="text-input" placeholder="https://.../events/respond/..." />
-      <button class="primary-button" type="submit">Open</button>
+</section>
+
+<section class="register-grid">
+
+  <article class="card-panel register-card" id="ondernemer-form">
+    <div class="register-card-header">
+      <span class="register-icon"><i class="bi bi-building"></i></span>
+      <div>
+        <h2>Organisatie</h2>
+        <p class="muted">Geef aan wanneer jij beschikbaar bent voor een gesprek met een student.</p>
+      </div>
+    </div>
+
+    <% if (registerRole === 'ondernemer' && registerError) { %>
+      <div class="alert-banner danger"><%= registerError %></div>
+    <% } %>
+
+    <form action="/register/ondernemer" method="POST" class="stack" id="ondernemerForm">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+      <label>
+        <span class="field-label">Naam contactpersoon <span class="required-star">*</span></span>
+        <input class="text-input" name="name" required placeholder="Voor- en achternaam"
+               value="<%= (registerRole === 'ondernemer' && registerValues && registerValues.name) ? registerValues.name : '' %>" />
+      </label>
+      <label>
+        <span class="field-label">Organisatienaam <span class="required-star">*</span></span>
+        <input class="text-input" name="organization" required placeholder="Naam van je bedrijf of instelling"
+               value="<%= (registerRole === 'ondernemer' && registerValues && registerValues.organization) ? registerValues.organization : '' %>" />
+      </label>
+      <label>
+        <span class="field-label">E-mailadres</span>
+        <input class="text-input" type="email" name="email" placeholder="jouw@email.nl"
+               value="<%= (registerRole === 'ondernemer' && registerValues && registerValues.email) ? registerValues.email : '' %>" />
+      </label>
+      <label>
+        <span class="field-label">Telefoonnummer</span>
+        <input class="text-input" type="tel" name="phone" placeholder="06-12345678"
+               value="<%= (registerRole === 'ondernemer' && registerValues && registerValues.phone) ? registerValues.phone : '' %>" />
+      </label>
+
+      <div class="slot-block">
+        <div class="row-space">
+          <span class="field-label">Voorkeursmomenten <span class="required-star">*</span></span>
+          <button type="button" class="secondary-button btn-sm" data-add-row="ondernemerSlots">+ Moment toevoegen</button>
+        </div>
+        <div class="stack-sm" id="ondernemerSlots">
+          <div class="dynamic-row two-up slot-row">
+            <input type="datetime-local" class="text-input" name="slots[]" required />
+            <input type="datetime-local" class="text-input" name="slots_end[]" placeholder="Eindtijd (optioneel)" />
+            <button type="button" class="ghost-button danger btn-sm" data-remove-row>✕</button>
+          </div>
+        </div>
+      </div>
+
+      <label>
+        <span class="field-label">Toelichting</span>
+        <textarea class="text-area" name="notes" rows="2" placeholder="Bijv. locatie, specifieke wensen…"><%= (registerRole === 'ondernemer' && registerValues && registerValues.notes) ? registerValues.notes : '' %></textarea>
+      </label>
+
+      <button class="primary-button" type="submit">Voorkeur doorgeven</button>
+    </form>
+  </article>
+
+  <article class="card-panel register-card" id="student-form">
+    <div class="register-card-header">
+      <span class="register-icon"><i class="bi bi-mortarboard"></i></span>
+      <div>
+        <h2>Student</h2>
+        <p class="muted">Geef aan wanneer jij beschikbaar bent voor een gesprek met een organisatie.</p>
+      </div>
+    </div>
+
+    <% if (registerRole === 'student' && registerError) { %>
+      <div class="alert-banner danger"><%= registerError %></div>
+    <% } %>
+
+    <form action="/register/student" method="POST" class="stack" id="studentForm">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+      <label>
+        <span class="field-label">Naam <span class="required-star">*</span></span>
+        <input class="text-input" name="name" required placeholder="Voor- en achternaam"
+               value="<%= (registerRole === 'student' && registerValues && registerValues.name) ? registerValues.name : '' %>" />
+      </label>
+      <label>
+        <span class="field-label">E-mailadres</span>
+        <input class="text-input" type="email" name="email" placeholder="student@hu.nl"
+               value="<%= (registerRole === 'student' && registerValues && registerValues.email) ? registerValues.email : '' %>" />
+      </label>
+      <label>
+        <span class="field-label">Telefoonnummer</span>
+        <input class="text-input" type="tel" name="phone" placeholder="06-12345678"
+               value="<%= (registerRole === 'student' && registerValues && registerValues.phone) ? registerValues.phone : '' %>" />
+      </label>
+
+      <div class="slot-block">
+        <div class="row-space">
+          <span class="field-label">Voorkeursmomenten <span class="required-star">*</span></span>
+          <button type="button" class="secondary-button btn-sm" data-add-row="studentSlots">+ Moment toevoegen</button>
+        </div>
+        <div class="stack-sm" id="studentSlots">
+          <div class="dynamic-row two-up slot-row">
+            <input type="datetime-local" class="text-input" name="slots[]" required />
+            <input type="datetime-local" class="text-input" name="slots_end[]" placeholder="Eindtijd (optioneel)" />
+            <button type="button" class="ghost-button danger btn-sm" data-remove-row>✕</button>
+          </div>
+        </div>
+      </div>
+
+      <label>
+        <span class="field-label">Toelichting</span>
+        <textarea class="text-area" name="notes" rows="2" placeholder="Bijv. opleiding, specifieke wensen…"><%= (registerRole === 'student' && registerValues && registerValues.notes) ? registerValues.notes : '' %></textarea>
+      </label>
+
+      <button class="primary-button" type="submit">Voorkeur doorgeven</button>
+    </form>
+  </article>
+
+</section>
+
+<section class="invite-section card-panel">
+  <div class="invite-inner">
+    <div>
+      <span class="section-label">Al een uitnodiging?</span>
+      <h2>Open je persoonlijke link</h2>
+      <p class="muted">Heb je een uitnodigingslink ontvangen? Plak hem hier om je beschikbaarheid in te vullen.</p>
+    </div>
+    <form class="invite-form" onsubmit="event.preventDefault(); var v = this.inviteLink.value.trim(); if(v) window.location.href = v;">
+      <input id="inviteLink" name="inviteLink" class="text-input" placeholder="https://…/events/respond/…" />
+      <button class="primary-button" type="submit">Openen</button>
     </form>
   </div>
 </section>
 
-<section class="section-intro">
-  <span class="section-label">Overzicht</span>
-  <h2>In drie stappen geregeld.</h2>
-</section>
-
-<section class="content-grid feature-grid">
-  <article class="card-panel feature-card">
-    <span class="feature-index">01</span>
-    <h3>Voor organisatoren</h3>
-    <p>Nieuw event, datumopties, deelnemers.</p>
-    <a href="/admin" class="feature-cta">Event aanmaken →</a>
-  </article>
-  <article class="card-panel feature-card">
-    <span class="feature-index">02</span>
-    <h3>Voor deelnemers</h3>
-    <p>Eén link, snel reageren, later aanpassen.</p>
-    <a href="#invite-section" class="feature-cta">Datum kiezen →</a>
-  </article>
-  <article class="card-panel feature-card">
-    <span class="feature-index">03</span>
-    <h3>Voor de keuze</h3>
-    <p>De beste datum staat vanzelf bovenaan.</p>
-    <a href="/admin/dashboard" class="feature-cta">Link delen →</a>
-  </article>
-</section>
 <%- include('partials/footer') %>
+

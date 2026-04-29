@@ -24,13 +24,14 @@
         <button type="button" class="nav-link help-button" data-help-toggle aria-haspopup="dialog" aria-controls="helpDialog">Help</button>
         <% if (isAdmin) { %>
           <a href="/admin/dashboard" class="nav-link <%= currentPath.startsWith('/admin/dashboard') ? 'active' : '' %>">Dashboard</a>
+          <a href="/admin/registraties" class="nav-link <%= currentPath.startsWith('/admin/registraties') ? 'active' : '' %>">Aanmeldingen</a>
           <a href="/admin" class="nav-link <%= currentPath === '/admin' ? 'active' : '' %>">Nieuw event</a>
           <form action="/admin/logout" method="POST" class="inline-form">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
             <button class="ghost-button" type="submit">Uitloggen</button>
           </form>
         <% } else { %>
-          <a href="/admin/login" class="pill-link">Organisator</a>
+          <a href="/admin/login" class="pill-link">Beheerder</a>
         <% } %>
       </nav>
     </div>

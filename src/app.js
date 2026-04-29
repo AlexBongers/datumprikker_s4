@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 
 const adminRouter = require('./routes/admin');
 const eventsRouter = require('./routes/events');
+const registerRouter = require('./routes/register');
 const { formatDateTimeRange, formatDateLabel, formatLocationMode, formatRelativeState, formatDeadlineLabel } = require('./lib/view-helpers');
 
 const app = express();
@@ -73,11 +74,12 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index', { registerError: null, registerRole: null, registerValues: {} });
 });
 
 app.use('/admin', adminRouter);
 app.use('/events', eventsRouter);
+app.use('/register', registerRouter);
 
 app.use((req, res) => {
   res.status(404).render('404');

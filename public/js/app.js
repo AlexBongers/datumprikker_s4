@@ -1,8 +1,8 @@
-function removeRowButton(row) {
+function removeRowButton(row, small) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'ghost-button danger';
-  button.textContent = 'Verwijder';
+  button.className = small ? 'ghost-button danger btn-sm' : 'ghost-button danger';
+  button.textContent = '✕';
   button.addEventListener('click', () => {
     row.remove();
     syncInviteeRequiredValues();
@@ -46,21 +46,21 @@ function bindSlotRow(row) {
   return row;
 }
 
-function createSlotRow() {
+function createSlotRow(small) {
   const row = document.createElement('div');
-  row.className = 'dynamic-row two-up';
+  row.className = 'dynamic-row two-up slot-row';
   row.innerHTML = `
     <input type="datetime-local" class="text-input" name="slots[]" required />
     <input type="datetime-local" class="text-input" name="slots_end[]" />
   `;
-  row.appendChild(removeRowButton(row));
+  row.appendChild(removeRowButton(row, small));
   return bindSlotRow(row);
 }
 
-function addSlotRow(containerId) {
+function addSlotRow(containerId, small) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const row = createSlotRow();
+  const row = createSlotRow(small);
   container.appendChild(row);
 }
 
@@ -162,3 +162,10 @@ if (eventForm?.dataset.formKind === 'create') {
 } else if (eventForm?.dataset.formKind === 'edit') {
   window.datumprikkerEditForm();
 }
+
+// Register forms on homepage (ondernemerForm / studentForm)
+['ondernemerSlots', 'studentSlots'].forEach((containerId) => {
+  const btn = document.querySelector(`[data-add-row="${containerId}"]`);
+  if (btn) btn.addEventListener('click', () => addSlotRow(containerId, true));
+  document.querySelectorAll(`#${containerId} .slot-row`).forEach(bindSlotRow);
+});
